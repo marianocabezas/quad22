@@ -82,7 +82,8 @@ class SimpleNet(BaseModel):
         ])
         self.decoder.to(self.device)
         self.final = ResConv3dBlock(
-            self.decoder_filters[-1], 1, 1, activation=nn.Identity
+            self.decoder_filters[-1], 1, 1, activation=nn.Identity,
+            norm=nn.InstanceNorm3d
         )
 
         # <Loss function setup>
