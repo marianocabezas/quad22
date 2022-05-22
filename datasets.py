@@ -146,9 +146,9 @@ class DiffusionDataset(Dataset):
         else:
             lr_end = np.random.randint(self.min_lr, self.max_lr, 1)
         hr_data = tokenize(dmri, dirs, bvalues)
-        key_data = deepcopy(hr_data[:, :lr_end, ...])
-        query_data = deepcopy(hr_data[:-1, lr_end:, ...])
-        target_data = hr_data[-1, lr_end:, ...]
+        key_data = deepcopy(hr_data[:lr_end, ...])
+        query_data = deepcopy(hr_data[lr_end:, :-1, ...])
+        target_data = hr_data[lr_end:, -1, ...]
 
         return (key_data, query_data), target_data
 
