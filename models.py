@@ -81,10 +81,7 @@ class SimpleNet(BaseModel):
             for f_in, f_out in zip(decoder_in, self.decoder_filters)
         ])
         self.decoder.to(self.device)
-        self.final = ResConv3dBlock(
-            self.decoder_filters[-1], 1, 1, activation=nn.Identity,
-            norm=nn.InstanceNorm3d
-        )
+        self.final = nn.Conv3d(self.decoder_filters[-1], 1, 1)
 
         # <Loss function setup>
         self.train_functions = [
@@ -133,4 +130,7 @@ class SimpleNet(BaseModel):
             sa.to(self.device)
             feat = sa(feat)
 
-        return self.final(sa)
+        feat_flat = feat.view((-1,) + feat.shape[2:])
+        dwi_flat = self.final(feat_flat)
+
+        return dwi_flat.view(feat.shape[:2] + feat.shape[3:])
