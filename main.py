@@ -69,7 +69,18 @@ def get_data(config, subjects):
     rois = []
     direction_list = []
     bvalue_list = []
+    load_start = time.time()
     for pi, p in enumerate(subjects):
+        tests = len(subjects) - pi
+        test_elapsed = time.time() - load_start
+        test_eta = tests * test_elapsed / (pi + 1)
+        print(
+            '\033[KLoading subject {:} ({:d}/{:d}) {:} ETA {:}'.format(
+                p, pi + 1, len(subjects),
+                time_to_string(test_elapsed),
+                time_to_string(test_eta),
+            ), end='\r'
+        )
         p_path = os.path.join(d_path, p)
         image, roi, directions, bvalues = get_subject(config, p_path)
         rois.append(roi)
