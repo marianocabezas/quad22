@@ -247,6 +247,10 @@ def main():
         os.mkdir(model_path)
     d_path = config['path']
     seeds = config['seeds']
+    try:
+        filters = config['filters']
+    except KeyError:
+        filters = None
 
     print(
         '{:}[{:}] {:}<Diffusion super-resolution framework>{:}'.format(
@@ -273,9 +277,9 @@ def main():
         random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
-        net = SimpleNet()
+        net = SimpleNet(encoder_filters=filters)
         starting_model = os.path.join(
-            model_path, 'simple-quad22-start.s{:05d}.pt'.format(seed)
+            model_path, 'simple-quad22-start.s{:05d}.pt'.format(seed),
         )
         net.save_model(starting_model)
         n_param = sum(
