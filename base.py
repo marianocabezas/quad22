@@ -831,13 +831,13 @@ class MultiheadedAttention(nn.Module):
             # nn.GroupNorm(heads, att_features * heads),
             # nn.BatchNorm1d(in_features * heads),
             # nn.GroupNorm(1, in_features * heads),
-            nn.Conv3d(att_features * heads, att_features * heads, 1),
+            nn.Conv3d(att_features * heads, att_features, 1),
             nn.ReLU(),
-            nn.InstanceNorm3d(att_features * heads),
+            nn.InstanceNorm3d(att_features),
             # nn.GroupNorm(heads, att_features * heads),
             # nn.BatchNorm1d(in_features * heads),
             # nn.GroupNorm(1, in_features * heads),
-            nn.Conv3d(att_features * heads, att_features, 1)
+            nn.Conv3d(att_features, att_features, 1)
         )
 
     def forward(self, x):
