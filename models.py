@@ -78,7 +78,7 @@ class SimpleNet(BaseModel):
         decoder_in = self.encoder_filters[-1:] + self.decoder_filters[:-1]
         self.decoder = nn.ModuleList([
             MultiheadedAttention(f_in, f_out, heads, 3)
-            for f_in, f_out in zip(decoder_in, decoder_filters)
+            for f_in, f_out in zip(decoder_in, self.decoder_filters)
         ])
         self.decoder.to(self.device)
         self.final = ResConv3dBlock(
