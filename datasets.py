@@ -123,6 +123,10 @@ class DiffusionDataset(Dataset):
             self.max_lr = max_lr
 
         # We get the preliminary patch slices (inside the bounding box)...
+        print(
+            len(self.rois), len(self.images), len(self.directions),
+            len(self.bvalues)
+        )
         slices = get_slices(self.rois, self.patch_size, self.overlap)
 
         # ... however, being inside the bounding box doesn't guarantee that the
