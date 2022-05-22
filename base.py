@@ -698,6 +698,7 @@ class SelfAttention(nn.Module):
     ):
         super().__init__()
         padding = kernel // 2
+        self.features = att_features
         self.map_key = nn.Conv3d(
             in_channels=in_features, out_channels=att_features,
             kernel_size=kernel, padding=padding
