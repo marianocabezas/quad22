@@ -698,7 +698,6 @@ class SelfAttention(nn.Module):
     ):
         super().__init__()
         padding = kernel // 2
-        self.features = att_features
         self.map_key = nn.Conv3d(
             in_features, att_features, kernel, padding
         )
@@ -713,7 +712,10 @@ class SelfAttention(nn.Module):
     def forward(self, x):
         # key = F.layer_norm(self.map_key(x))
         x_batched = x.view((-1,) + x.shape[2:])
-        print(x_batched.shape,  self.map_key(x_batched).shape)
+        print(
+            x_batched.shape,  self.map_key(x_batched).shape,
+            self.map_key.kernel_size, self.map_key.padding
+        )
         key = self.map_key(x_batched).view(
             x.shape[:2] + (-1,) + x.shape[3:]
         )
