@@ -221,7 +221,7 @@ def test(
 """
 
 
-def main(verbose=2):
+def main():
     # Init
     c = color_codes()
     options = parse_inputs()
@@ -296,7 +296,8 @@ def main(verbose=2):
                 model_path,
                 'simple-quad22-start.n{:05d}.s{:05d}.pt'.format(i, seed)
             )
-            train(config, net, training, validation, fold_name)
+            train(config, net, training, validation, fold_name, 2)
+            test(config, seed, net, 'simple-quad22', testing, 2)
 
 
 if __name__ == '__main__':
