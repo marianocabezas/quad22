@@ -249,7 +249,7 @@ def main():
         if os.path.isdir(os.path.join(d_path, subject))
     ])
 
-    print(subjects)
+    print(os.listdir(d_path), subjects)
 
     # Main loop with all the seeds
     for test_n, seed in enumerate(seeds):
