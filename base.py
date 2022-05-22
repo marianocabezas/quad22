@@ -827,13 +827,13 @@ class MultiheadedAttention(nn.Module):
             for _ in range(self.blocks)
         ])
         self.final_block = nn.Sequential(
-            nn.InstanceNorm3d(heads, att_features * heads),
+            nn.InstanceNorm3d(att_features * heads),
             # nn.GroupNorm(heads, att_features * heads),
             # nn.BatchNorm1d(in_features * heads),
             # nn.GroupNorm(1, in_features * heads),
             nn.Conv3d(att_features * heads, att_features * heads, 1),
             nn.ReLU(),
-            nn.InstanceNorm3d(heads, att_features * heads),
+            nn.InstanceNorm3d(att_features * heads),
             # nn.GroupNorm(heads, att_features * heads),
             # nn.BatchNorm1d(in_features * heads),
             # nn.GroupNorm(1, in_features * heads),
