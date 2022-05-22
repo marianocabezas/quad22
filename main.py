@@ -46,7 +46,7 @@ def parse_inputs():
 def get_subject(config, p_path):
     roi = get_mask(find_file(config['roi'], p_path))
     image_name = find_file(config['image'], p_path)
-    raw_image = np.moveaxis(nibabel.load(image_name).get_fdata(), -1, 0)
+    raw_image = nibabel.load(image_name).get_fdata()
     norm_image = get_normalised_image(raw_image, roi)
     bvecs_file = find_file(config['bvecs'], p_path)
     bvals_file = find_file(config['bvals'], p_path)
