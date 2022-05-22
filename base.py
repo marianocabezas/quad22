@@ -844,8 +844,8 @@ class MultiheadedAttention(nn.Module):
         x_batched = x.view((-1,) + x.shape[2:])
         norm_x = self.init_norm(x_batched).view(x.shape)
         sa = torch.cat([sa_i(norm_x) for sa_i in self.sa_blocks], dim=1)
-        sa_flat = sa.view((-1,) + sa.shape[2:])
-        features = self.final_block(sa_flat)
+        print(sa.shape)
+        features = self.final_block(sa)
         return features.view(x.shape) + x
 
 
