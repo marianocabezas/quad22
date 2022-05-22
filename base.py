@@ -699,13 +699,13 @@ class SelfAttention(nn.Module):
         super().__init__()
         padding = kernel // 2
         self.features = att_features
-        self.map_key = nn.Conv1d(
+        self.map_key = nn.Conv3d(
             in_features, att_features, kernel, padding
         )
-        self.map_query = nn.Conv1d(
+        self.map_query = nn.Conv3d(
             in_features, att_features, kernel, padding
         )
-        self.map_value = nn.Conv1d(
+        self.map_value = nn.Conv3d(
             in_features, in_features, kernel, padding
         )
         self.norm = norm
@@ -748,13 +748,13 @@ class PairedAttention(nn.Module):
         super().__init__()
         padding = kernel // 2
         self.features = att_features
-        self.map_key = nn.Conv1d(
+        self.map_key = nn.Conv3d(
             key_features, att_features, kernel, padding
         )
-        self.map_query = nn.Conv1d(
+        self.map_query = nn.Conv3d(
             query_features, att_features, kernel, padding
         )
-        self.map_value = nn.Conv1d(
+        self.map_value = nn.Conv3d(
             key_features, att_features, kernel, padding
         )
         self.norm = norm
