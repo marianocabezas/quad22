@@ -238,7 +238,7 @@ def main():
     seeds = config['seeds']
 
     print(
-        '{:}[{:}] {:}<Incremental learning framework>{:}'.format(
+        '{:}[{:}] {:}<Diffusion super-resolution framework>{:}'.format(
             c['c'], strftime("%H:%M:%S"), c['y'], c['nc']
         )
     )

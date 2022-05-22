@@ -227,6 +227,8 @@ def get_normalised_image(
     else:
         mask_bin = mask.astype(np.bool)
 
+    print(image.shape, mask.shape)
+
     if len(image.shape) > len(mask_bin.shape):
         image_list = []
         for i in range(image.shape[-1]):
