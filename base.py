@@ -713,15 +713,17 @@ class SelfAttention(nn.Module):
     def forward(self, x):
         # key = F.layer_norm(self.map_key(x))
         x_batched = x.view((-1,) + x.shape[2:])
-        key = self.map_key(x_batched).view(x.shape)
+        key = self.map_key(x_batched).view((x.shape[0], -1) + x.shape[2:])
         key = key.movedim((3, 4, 5), (1, 2, 3))
         key_token = key.reshape(-1, x.shape[0], x.shape[1])
         # query = F.layer_norm(self.map_query(x))
-        query = self.map_query(x_batched).view(x.shape)
+        query = self.map_query(x_batched).view(
+            (x.shape[0], -1) + x.shape[2:]
+        )
         query = query.movedim((3, 4, 5), (1, 2, 3))
         query_token = query.reshape(-1, x.shape[0], x.shape[1])
         # value = F.layer_norm(self.map_value(x))
-        value = self.map_value(x_batched).view(x.shape)
+        value = self.map_value(x_batched).view((x.shape[0], -1) + x.shape[2:])
         value = value.movedim((3, 4, 5), (1, 2, 3))
         value_token = value.reshape(-1, x.shape[0], x.shape[1])
 
@@ -762,16 +764,22 @@ class PairedAttention(nn.Module):
     def forward(self, x_key, x_query):
         # key = F.layer_norm(self.map_key(x))
         key_batched = x_key.view((-1,) + x_key.shape[2:])
-        key = self.map_key(key_batched).view(x_key.shape)
+        key = self.map_key(key_batched).view(
+            (x_key.shape[0], -1) + x_key.shape[2:]
+        )
         key = key.movedim((3, 4, 5), (1, 2, 3))
         key_token = key.reshape(-1, x_key.shape[0], x_key.shape[1])
         # query = F.layer_norm(self.map_query(x))
         query_batched = x_query.view((-1,) + x_query.shape[2:])
-        query = self.map_query(query_batched).view(x_query.shape)
+        query = self.map_query(query_batched).view(
+            (x_query.shape[0], -1) + x_query.shape[2:]
+        )
         query = query.movedim((3, 4, 5), (1, 2, 3))
         query_token = query.reshape(-1, x_query.shape[0], x_query.shape[1])
         # value = F.layer_norm(self.map_value(x))
-        value = self.map_value(key_batched)
+        value = self.map_value(key_batched).view(
+            (x_key.shape[0], -1) + x_key.shape[2:]
+        )
         value = value.movedim((3, 4, 5), (1, 2, 3))
         value_token = value.reshape(-1, x_key.shape[0], x_key.shape[1])
 
@@ -829,7 +837,7 @@ class MultiheadedAttention(nn.Module):
         sa = torch.cat([sa_i(norm_x) for sa_i in self.sa_blocks], dim=1)
         sa.view((-1,) + sa.shape[2:])
         features = self.final_block(sa)
-        return features.view(x.shapes) + x
+        return features.view(x.shape) + x
 
 
 class MultiheadedPairedAttention(nn.Module):
@@ -881,4 +889,4 @@ class MultiheadedPairedAttention(nn.Module):
         ], dim=1)
         sa.view((-1,) + sa.shape[2:])
         features = self.final_block(sa)
-        return features.view(query.shapes)
+        return features.view(query.shape)
