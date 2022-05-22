@@ -715,10 +715,6 @@ class SelfAttention(nn.Module):
     def forward(self, x):
         # key = F.layer_norm(self.map_key(x))
         x_batched = x.view((-1,) + x.shape[2:])
-        print(
-            x_batched.shape,  self.map_key(x_batched).shape,
-            self.map_key.kernel_size, self.map_key.padding
-        )
         key = self.map_key(x_batched).view(
             x.shape[:2] + (-1,) + x.shape[3:]
         )
@@ -761,13 +757,16 @@ class PairedAttention(nn.Module):
         padding = kernel // 2
         self.features = att_features
         self.map_key = nn.Conv3d(
-            key_features, att_features, kernel, padding
+            in_channels=key_features, out_channels=att_features,
+            kernel_size=kernel, padding=padding
         )
         self.map_query = nn.Conv3d(
-            query_features, att_features, kernel, padding
+            in_channels=query_features, out_channels=att_features,
+            kernel_size=kernel, padding=padding
         )
         self.map_value = nn.Conv3d(
-            key_features, att_features, kernel, padding
+            in_channels=key_features, out_channels=att_features,
+            kernel_size=kernel, padding=padding
         )
         self.norm = norm
 
@@ -811,7 +810,7 @@ class MultiheadedAttention(nn.Module):
     """
 
     def __init__(
-            self, in_features, att_features, kernel=1, heads=32,
+            self, in_features, att_features, heads=32, kernel=1,
             norm=partial(torch.softmax, dim=1),
     ):
         super().__init__()
@@ -860,8 +859,8 @@ class MultiheadedPairedAttention(nn.Module):
     """
 
     def __init__(
-            self, key_features, query_features, att_features, kernel=1,
-            heads=32, norm=partial(torch.softmax, dim=1),
+            self, key_features, query_features, att_features, heads=32,
+            kernel=1, norm=partial(torch.softmax, dim=1),
     ):
         super().__init__()
         self.blocks = heads
