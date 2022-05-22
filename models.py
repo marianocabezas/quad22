@@ -46,7 +46,7 @@ class SimpleNet(BaseModel):
         self.init = False
         # Init values
         if encoder_filters is None:
-            self.encoder_filters = [8, 8, 8, 8, 8]
+            self.encoder_filters = [4, 4, 4, 4, 4, 4]
         else:
             self.encoder_filters = encoder_filters
         if decoder_filters is None:
