@@ -227,12 +227,10 @@ def get_normalised_image(
     else:
         mask_bin = mask.astype(np.bool)
 
-    print(image.shape, mask.shape)
-
     if len(image.shape) > len(mask_bin.shape):
         image_list = []
         for i in range(image.shape[-1]):
-            image_i = image[..., i]
+            image_i = image[i, ...]
             image_mu = np.mean(image_i[mask_bin])
             image_sigma = np.std(image_i[mask_bin])
             if masked:
