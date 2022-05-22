@@ -44,6 +44,7 @@ def parse_inputs():
 
 
 def get_subject(config, p_path):
+    print(p_path, find_file(config['roi'], p_path))
     roi = get_mask(find_file(config['roi'], p_path))
     image_name = find_file(config['image'], p_path)
     raw_image = nibabel.load(image_name).get_fdata()
