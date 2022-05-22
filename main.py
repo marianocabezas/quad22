@@ -285,7 +285,7 @@ def main():
         # Cross-validation loop
         for i in range(n_folds):
             testing = subjects[i * n_test:(i + 1) * n_test]
-            not_testing = subjects[(i + 1) * n_test:] + test[0:i * n_test]
+            not_testing = subjects[(i + 1) * n_test:] + subjects[0:i * n_test]
             if val_split > 0:
                 validation = not_testing[:len(not_testing) * val_split]
                 training = not_testing[len(not_testing) * val_split:]
