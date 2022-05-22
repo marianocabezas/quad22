@@ -59,29 +59,25 @@ class SimpleNet(BaseModel):
         self.device = device
 
         # <Parameter setup>
-        key_in = [5] + self.encoder_filters[:-1]
         self.key_encoder = nn.ModuleList([
-            MultiheadedAttention(f_in, f_out, heads, 3)
-            for f_in, f_out in zip(key_in, self.encoder_filters)
+            MultiheadedAttention(5, f_att, heads, 3)
+            for f_att in self.encoder_filters
         ])
         self.key_encoder.to(self.device)
-        query_in = [4] + self.encoder_filters[:-1]
         self.query_encoder = nn.ModuleList([
-            MultiheadedAttention(f_in, f_out, heads, 3)
-            for f_in, f_out in zip(query_in, self.encoder_filters)
+            MultiheadedAttention(4, f_att, heads, 3)
+            for f_att in self.encoder_filters
         ])
         self.query_encoder.to(self.device)
         self.bottleneck = MultiheadedPairedAttention(
-            self.encoder_filters[-1], self.encoder_filters[-1],
-            self.encoder_filters[-1], 3, heads
+            5, 4, self.encoder_filters[-1], 3, heads
         )
         decoder_in = self.encoder_filters[-1:] + self.decoder_filters[:-1]
         self.decoder = nn.ModuleList([
-            MultiheadedAttention(f_in, f_out, heads, 3)
-            for f_in, f_out in zip(decoder_in, self.decoder_filters)
+            MultiheadedAttention(4, f_att, heads, 3)
         ])
         self.decoder.to(self.device)
-        self.final = nn.Conv3d(self.decoder_filters[-1], 1, 1)
+        self.final = nn.Conv3d(4, 1, 1)
 
         # <Loss function setup>
         self.train_functions = [

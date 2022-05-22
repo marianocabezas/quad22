@@ -837,14 +837,15 @@ class MultiheadedAttention(nn.Module):
             # nn.GroupNorm(heads, att_features * heads),
             # nn.BatchNorm1d(in_features * heads),
             # nn.GroupNorm(1, in_features * heads),
-            nn.Conv3d(att_features, att_features, 1)
+            nn.Conv3d(att_features, in_features, 1)
         )
 
     def forward(self, x):
-        x_batched = x.view((-1,) + x.shape[2:])
+        x_batched = x.flatten(0, 1)
         norm_x = self.init_norm(x_batched).view(x.shape)
-        sa = torch.cat([sa_i(norm_x) for sa_i in self.sa_blocks], dim=1)
-        print(sa.shape)
+        sa = torch.cat(
+            [sa_i(norm_x).flatten(0, 1) for sa_i in self.sa_blocks], dim=1
+        )
         features = self.final_block(sa)
         return features.view(x.shape) + x
 
@@ -880,13 +881,13 @@ class MultiheadedPairedAttention(nn.Module):
             # nn.GroupNorm(heads, att_features * heads),
             # nn.BatchNorm1d(in_features * heads),
             # nn.GroupNorm(1, in_features * heads),
-            nn.Conv3d(att_features * heads, att_features * heads, 1),
+            nn.Conv3d(att_features * heads, att_features, 1),
             nn.ReLU(),
-            nn.InstanceNorm3d(heads, att_features * heads),
+            nn.InstanceNorm3d(att_features),
             # nn.GroupNorm(heads, att_features * heads),
             # nn.BatchNorm1d(in_features * heads),
             # nn.GroupNorm(1, in_features * heads),
-            nn.Conv3d(att_features * heads, att_features, 1)
+            nn.Conv3d(att_features, query_features, 1)
 
         )
 
@@ -894,8 +895,8 @@ class MultiheadedPairedAttention(nn.Module):
         norm_key = self.key_norm(key)
         norm_query = self.key_norm(query)
         sa = torch.cat([
-            sa_i(norm_key, norm_query) for sa_i in self.sa_blocks
+            sa_i(norm_key, norm_query).flatten(0, 1)
+            for sa_i in self.sa_blocks
         ], dim=1)
-        sa.view((-1,) + sa.shape[2:])
         features = self.final_block(sa)
         return features.view(query.shape)
