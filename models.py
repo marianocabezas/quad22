@@ -72,9 +72,9 @@ class SimpleNet(BaseModel):
         self.bottleneck = MultiheadedPairedAttention(
             5, 4, self.encoder_filters[-1], 3, heads
         )
-        decoder_in = self.encoder_filters[-1:] + self.decoder_filters[:-1]
         self.decoder = nn.ModuleList([
             MultiheadedAttention(4, f_att, heads, 3)
+            for f_att in self.encoder_filters
         ])
         self.decoder.to(self.device)
         self.final = nn.Conv3d(4, 1, 1)
