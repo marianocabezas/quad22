@@ -69,7 +69,7 @@ def get_data(config, subjects):
     rois = []
     direction_list = []
     bvalue_list = []
-
+    print(subjects)
     for pi, p in enumerate(subjects):
         p_path = os.path.join(d_path, p)
         image, roi, directions, bvalues = get_subject(config, p_path)
