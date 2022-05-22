@@ -734,7 +734,7 @@ class SelfAttention(nn.Module):
         value = value.movedim((3, 4, 5), (1, 2, 3))
         value_token = value.reshape((-1,) + value.shape[-2:])
 
-        att = torch.bmm(key_token.transpose(1, 2), query_token)
+        att = torch.bmm(key_token, query_token.transpose(1, 2))
         att_map = self.norm(att / np.sqrt(self.features))
         print(value_token.shape, att_map.shape)
         features = torch.bmm(value_token, att_map).view(query.shape)
@@ -793,7 +793,7 @@ class PairedAttention(nn.Module):
         value = value.movedim((3, 4, 5), (1, 2, 3))
         value_token = value.reshape((-1,) + value.shape[-2:])
 
-        att = torch.bmm(key_token.transpose(1, 2), query_token)
+        att = torch.bmm(key_token, query_token.transpose(1, 2))
         att_map = self.norm(att / np.sqrt(self.features))
 
         features = torch.bmm(value_token, att_map).view(query.shape)
