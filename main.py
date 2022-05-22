@@ -69,7 +69,6 @@ def get_data(config, subjects):
     rois = []
     direction_list = []
     bvalue_list = []
-    print(subjects)
     for pi, p in enumerate(subjects):
         p_path = os.path.join(d_path, p)
         image, roi, directions, bvalues = get_subject(config, p_path)
@@ -249,6 +248,8 @@ def main():
         subject for subject in os.listdir(d_path)
         if os.path.isdir(os.path.join(d_path, subject))
     ])
+
+    print(subjects)
 
     # Main loop with all the seeds
     for test_n, seed in enumerate(seeds):
