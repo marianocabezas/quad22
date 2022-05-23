@@ -123,12 +123,13 @@ class SimpleNet(BaseModel):
             key = k_sa(key)
             q_sa.to(self.device)
             query = q_sa(query)
+        self.bottleneck.to(self.device)
         feat = self.bottleneck(key, query)
         for sa in self.decoder:
             sa.to(self.device)
             feat = sa(feat)
 
-        feat_flat = feat.view((-1,) + feat.shape[2:])
+        feat_flat = feat.flatten(0, 1)
         self.final.to(self.device)
         dwi_flat = self.final(feat_flat)
 
