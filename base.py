@@ -827,17 +827,17 @@ class MultiheadedAttention(nn.Module):
             for _ in range(self.blocks)
         ])
         self.final_block = nn.Sequential(
-            nn.InstanceNorm3d(att_features * heads),
+            nn.InstanceNorm3d(in_features * heads),
             # nn.GroupNorm(heads, att_features * heads),
             # nn.BatchNorm1d(in_features * heads),
             # nn.GroupNorm(1, in_features * heads),
-            nn.Conv3d(att_features * heads, att_features, 1),
+            nn.Conv3d(in_features * heads, in_features, 1),
             nn.ReLU(),
-            nn.InstanceNorm3d(att_features),
+            nn.InstanceNorm3d(in_features),
             # nn.GroupNorm(heads, att_features * heads),
             # nn.BatchNorm1d(in_features * heads),
             # nn.GroupNorm(1, in_features * heads),
-            nn.Conv3d(att_features, in_features, 1)
+            nn.Conv3d(in_features, in_features, 1)
         )
 
     def forward(self, x):
@@ -845,11 +845,6 @@ class MultiheadedAttention(nn.Module):
         norm_x = self.init_norm(x_batched).view(x.shape)
         sa = torch.cat(
             [sa_i(norm_x).flatten(0, 1) for sa_i in self.sa_blocks], dim=1
-        )
-        print(
-            x.shape, x_batched.shape, norm_x.shape, sa.shape,
-            self.sa_blocks[0](norm_x).flatten(0, 1).shape,
-            self.sa_blocks[0](norm_x).shape
         )
         features = self.final_block(sa)
         return features.view(x.shape) + x
@@ -882,17 +877,17 @@ class MultiheadedPairedAttention(nn.Module):
             for _ in range(self.blocks)
         ])
         self.final_block = nn.Sequential(
-            nn.InstanceNorm3d(heads, att_features * heads),
+            nn.InstanceNorm3d(heads, query_features * heads),
             # nn.GroupNorm(heads, att_features * heads),
             # nn.BatchNorm1d(in_features * heads),
             # nn.GroupNorm(1, in_features * heads),
-            nn.Conv3d(att_features * heads, att_features, 1),
+            nn.Conv3d(query_features * heads, query_features, 1),
             nn.ReLU(),
-            nn.InstanceNorm3d(att_features),
+            nn.InstanceNorm3d(query_features),
             # nn.GroupNorm(heads, att_features * heads),
             # nn.BatchNorm1d(in_features * heads),
             # nn.GroupNorm(1, in_features * heads),
-            nn.Conv3d(att_features, query_features, 1)
+            nn.Conv3d(query_features, query_features, 1)
 
         )
 
