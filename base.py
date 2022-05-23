@@ -796,7 +796,6 @@ class PairedAttention(nn.Module):
 
         att = torch.bmm(key_token, query_token.transpose(1, 2))
         att_map = self.norm(att / np.sqrt(self.features))
-        print(att_map.shape, value_token.shape)
         features_flat = torch.bmm(
             value_token.transpose(1, 2), att_map
         ).transpose(1, 2)
