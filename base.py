@@ -720,25 +720,22 @@ class SelfAttention(nn.Module):
             x.shape[:2] + (-1,) + x.shape[3:]
         )
         key = key.movedim((3, 4, 5), (1, 2, 3))
-        key_token = key.flatten(0, -3)
         # query = F.layer_norm(self.map_query(x))
         query = self.map_query(x_batched).view(
             x.shape[:2] + (-1,) + x.shape[3:]
         )
         query = query.movedim((3, 4, 5), (1, 2, 3))
-        query_token = query.flatten(0, -3)
         # value = F.layer_norm(self.map_value(x))
         value = self.map_value(x_batched).view(
             x.shape[:2] + (-1,) + x.shape[3:]
         )
         value = value.movedim((3, 4, 5), (1, 2, 3))
-        value_token = value.flatten(0, -3)
 
-        att = torch.bmm(key_token, query_token.transpose(1, 2))
+        att = torch.matmul(key, query.transpose(-1, -2))
         att_map = self.norm(att / np.sqrt(self.features))
-        features = torch.bmm(
-            value_token.transpose(1, 2), att_map
-        ).transpose(1, 2).reshape(value.shape)
+        features = torch.matmul(
+            value.transpose(-1, -2), att_map
+        ).transpose(-1, -2)
 
         return features.movedim((1, 2, 3), (3, 4, 5))
 
@@ -779,29 +776,23 @@ class PairedAttention(nn.Module):
             x_key.shape[:2] + (-1,) + x_key.shape[3:]
         )
         key = key.movedim((3, 4, 5), (1, 2, 3))
-        key_token = key.flatten(0, -3)
         # query = F.layer_norm(self.map_query(x))
         query_batched = x_query.view((-1,) + x_query.shape[2:])
         query = self.map_query(query_batched).view(
             x_query.shape[:2] + (-1,) + x_query.shape[3:]
         )
         query = query.movedim((3, 4, 5), (1, 2, 3))
-        query_token = query.flatten(0, -3)
         # value = F.layer_norm(self.map_value(x))
         value = self.map_value(key_batched).view(
             x_key.shape[:2] + (-1,) + x_key.shape[3:]
         )
         value = value.movedim((3, 4, 5), (1, 2, 3))
-        value_token = value.flatten(0, -3)
 
-        att = torch.bmm(key_token, query_token.transpose(1, 2))
+        att = torch.matmul(key, query.transpose(-1, -2))
         att_map = self.norm(att / np.sqrt(self.features))
-        features_flat = torch.bmm(
-            value_token.transpose(1, 2), att_map
-        ).transpose(1, 2)
-        features = features_flat.reshape(
-            query.shape[:4] + features_flat.shape[1:]
-        )
+        features = torch.matmul(
+            value.transpose(-1, -2), att_map
+        ).transpose(-1, -2)
 
         return features.movedim((1, 2, 3), (3, 4, 5))
 
