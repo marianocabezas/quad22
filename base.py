@@ -767,7 +767,7 @@ class PairedAttention(nn.Module):
             kernel_size=kernel, padding=padding
         )
         self.map_value = nn.Conv3d(
-            in_channels=key_features, out_channels=att_features,
+            in_channels=key_features, out_channels=query_features,
             kernel_size=kernel, padding=padding
         )
         self.norm = norm
