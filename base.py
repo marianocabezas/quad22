@@ -868,15 +868,13 @@ class MultiheadedPairedAttention(nn.Module):
         self.key_norm = nn.GroupNorm(1, key_features)
         self.query_norm = nn.GroupNorm(1, query_features)
         self.sa_blocks = nn.ModuleList([
-            nn.Sequential(
-                PairedAttention(
-                    key_features, query_features, att_features, kernel, norm
-                ),
-                nn.ReLU()
+            PairedAttention(
+                key_features, query_features, att_features, kernel, norm
             )
             for _ in range(self.blocks)
         ])
         self.final_block = nn.Sequential(
+            nn.ReLU(),
             nn.InstanceNorm3d(heads, query_features * heads),
             # nn.GroupNorm(heads, att_features * heads),
             # nn.BatchNorm1d(in_features * heads),
