@@ -740,6 +740,8 @@ class SelfAttention(nn.Module):
             value_token.transpose(1, 2), att_map
         ).transpose(1, 2).reshape(x.shape)
 
+        print(features.shape, features.movedim((1, 2, 3), (3, 4, 5)).shape)
+
         return features.movedim((1, 2, 3), (3, 4, 5))
 
 
