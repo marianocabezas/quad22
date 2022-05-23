@@ -251,7 +251,10 @@ def main():
         filters = config['filters']
     except KeyError:
         filters = None
-
+    try:
+        heads = config['heads']
+    except KeyError:
+        heads = 32
     print(
         '{:}[{:}] {:}<Diffusion super-resolution framework>{:}'.format(
             c['c'], strftime("%H:%M:%S"), c['y'], c['nc']
@@ -277,7 +280,7 @@ def main():
         random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
-        net = SimpleNet(encoder_filters=filters)
+        net = SimpleNet(encoder_filters=filters, heads=heads)
         starting_model = os.path.join(
             model_path, 'simple-quad22-start.s{:05d}.pt'.format(seed),
         )

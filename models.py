@@ -39,7 +39,9 @@ class SimpleNet(BaseModel):
     def __init__(
             self,
             encoder_filters=None, decoder_filters=None, heads=32,
-            device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
+            device=torch.device(
+                "cuda:0" if torch.cuda.is_available() else "cpu"
+            ),
             verbose=0,
     ):
         super().__init__()
