@@ -736,6 +736,12 @@ class SelfAttention(nn.Module):
 
         att = torch.bmm(key_token, query_token.transpose(1, 2))
         att_map = self.norm(att / np.sqrt(self.features))
+        print(
+            value_token.transpose(1, 2).shape, att_map.shape,
+            torch.bmm(
+                value_token.transpose(1, 2), att_map
+            ).shape
+        )
         features = torch.bmm(
             value_token.transpose(1, 2), att_map
         ).transpose(1, 2).view(query.shape)
