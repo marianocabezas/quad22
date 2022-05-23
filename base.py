@@ -892,8 +892,10 @@ class MultiheadedPairedAttention(nn.Module):
         )
 
     def forward(self, key, query):
-        norm_key = self.key_norm(key)
-        norm_query = self.key_norm(query)
+        key_batched = key.flatten(0, 1)
+        norm_key = self.key_norm(key_batched).view(key.shape)
+        query_batched = query.flatten(0, 1)
+        norm_query = self.key_norm(query_batched).view(key.shape)
         sa = torch.cat([
             sa_i(norm_key, norm_query).flatten(0, 1)
             for sa_i in self.sa_blocks
