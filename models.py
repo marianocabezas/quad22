@@ -129,6 +129,7 @@ class SimpleNet(BaseModel):
             feat = sa(feat)
 
         feat_flat = feat.view((-1,) + feat.shape[2:])
+        self.final.to(self.device)
         dwi_flat = self.final(feat_flat)
 
         return dwi_flat.view(feat.shape[:2] + feat.shape[3:])
