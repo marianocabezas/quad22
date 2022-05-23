@@ -886,7 +886,6 @@ class MultiheadedPairedAttention(nn.Module):
             # nn.BatchNorm1d(in_features * heads),
             # nn.GroupNorm(1, in_features * heads),
             nn.Conv3d(query_features, query_features, 1)
-
         )
 
     def forward(self, key, query):
