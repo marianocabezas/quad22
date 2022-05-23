@@ -892,7 +892,7 @@ class MultiheadedPairedAttention(nn.Module):
         )
 
     def forward(self, key, query):
-        key_batched = key.view(0, 1)
+        key_batched = key.flatten(0, 1)
         norm_key = self.key_norm(key_batched).view(key.shape)
         query_batched = query.flatten(0, 1)
         norm_query = self.key_norm(query_batched).view(key.shape)
