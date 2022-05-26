@@ -469,8 +469,8 @@ class BaseModel(nn.Module):
             # Then we just fill the results image.
             for si, (xslice, yslice, zslice) in enumerate(slices):
                 counts[slice(None), xslice, yslice, zslice] += 1
-                seg_bi = seg_out[si, 0].cpu().numpy()
-                seg[xslice, yslice, zslice] += seg_bi
+                seg_bi = seg_out[si, :].cpu().numpy()
+                seg[slice(None), xslice, yslice, zslice] += seg_bi
 
             # Printing
             self.print_batch(bi, n_batches, case, n_cases, t_start, t_in)
