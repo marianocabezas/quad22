@@ -311,7 +311,7 @@ def main():
 
             fold_name = os.path.join(
                 model_path,
-                'simple-quad22-start.n{:05d}.s{:05d}.pt'.format(i, seed)
+                'simple-quad22.n{:05d}.s{:05d}.pt'.format(i, seed)
             )
             train(config, net, training, validation, fold_name, 2)
             test(config, seed, net, 'simple-quad22', testing, 2)
