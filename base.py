@@ -403,9 +403,9 @@ class BaseModel(nn.Module):
         # produce unwanted artifacts, so I don't know.
         # Initial results. Filled to 0.
         if isinstance(data, tuple):
-            data_shape = data[0].shape[-3:]
+            data_shape = data[1].shape[:1] + data[1].shape[-3:]
         else:
-            data_shape = data.shape[-3:]
+            data_shape = data.shape[:1] + data.shape[-3:]
         seg = np.zeros(data_shape)
         counts = np.zeros(data_shape)
 
@@ -468,7 +468,7 @@ class BaseModel(nn.Module):
 
             # Then we just fill the results image.
             for si, (xslice, yslice, zslice) in enumerate(slices):
-                counts[xslice, yslice, zslice] += 1
+                counts[slice(None), xslice, yslice, zslice] += 1
                 seg_bi = seg_out[si, 0].cpu().numpy()
                 seg[xslice, yslice, zslice] += seg_bi
 
