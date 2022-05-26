@@ -206,8 +206,7 @@ def test(
                 ), end='\r'
             )
 
-        d_path = os.path.join(config['path'], subject)
-        p_path = os.path.join(d_path, subject)
+        p_path = os.path.join(config['path'], subject)
         mask_path = os.path.join(p_path, mask_name)
         hr_image, _, directions, bvalues = get_subject(config, p_path)
         lr_image = hr_image[:22, ...]
