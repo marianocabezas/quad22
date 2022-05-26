@@ -415,7 +415,7 @@ class BaseModel(nn.Module):
             list(
                 range(0, lim - patch_size, patch_size // 4)
             ) + [lim - patch_size]
-            for lim in data_shape
+            for lim in data_shape[1:]
         ]
 
         steps_product = list(itertools.product(*steps))
