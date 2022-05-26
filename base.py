@@ -452,8 +452,6 @@ class BaseModel(nn.Module):
                         ])
                         for x_i in data
                     )
-                    for x_i, b_i in zip(data, batch_cuda):
-                        print(x_i.shape, b_i.shape)
                     seg_out = self(*batch_cuda)
                 else:
                     batch_cuda = torch.stack([
