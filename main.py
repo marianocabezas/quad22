@@ -211,8 +211,8 @@ def test(
         hr_image, _, directions, bvalues = get_subject(config, p_path)
         lr_image = hr_image[:22, ...]
         token = tokenize(hr_image, directions, bvalues)
-        key_data = token[:, :22, ...]
-        query_data = token[:-1, 22:, ...]
+        key_data = token[:22, ...]
+        query_data = token[22:, :-1, ...]
         extra_image = net.patch_inference(
             (key_data, query_data), config['test_patch'], config['test_batch'],
             sub_i, len(testing_subjects), test_start
