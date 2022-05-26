@@ -220,7 +220,8 @@ def test(
         hr_prediction = np.concatenate([lr_image, extra_image])
         image_nii = nibabel.load(find_file(config['image'], p_path))
         prediction_nii = nibabel.Nifti1Image(
-            hr_prediction, image_nii.get_qform(), image_nii.header
+            np.moveaxis(hr_prediction, 0, -1),
+            image_nii.get_qform(), image_nii.header
         )
         prediction_nii.to_filename(mask_path)
 
