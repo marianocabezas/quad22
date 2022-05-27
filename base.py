@@ -837,7 +837,10 @@ class MultiheadedAttention(nn.Module):
             [sa_i(norm_x).flatten(0, 1) for sa_i in self.sa_blocks], dim=1
         )
         features = self.final_block(sa)
-        return features.view(x.shape) + x
+        if features.shape != x_batched.shape:
+            x_batched = F.interpolate(x_batched, size=features.size()[2:])
+        residual = features + x_batched
+        return residual.view(x.shape[:3] + residual.shape[2:])
 
 
 class MultiheadedPairedAttention(nn.Module):
@@ -888,4 +891,4 @@ class MultiheadedPairedAttention(nn.Module):
             for sa_i in self.sa_blocks
         ], dim=1)
         features = self.final_block(sa)
-        return features.view(query.shape)
+        return features.view(query.shape[:3] + features.shape[2:])
