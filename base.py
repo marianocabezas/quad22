@@ -715,6 +715,7 @@ class SelfAttention(nn.Module):
     def forward(self, x):
         # key = F.layer_norm(self.map_key(x))
         x_batched = x.flatten(0, 1)
+        print(x.shape, x_batched.shape)
         key = self.map_key(x_batched)
         key = key.view(x.shape[:2] + (-1,) + key.shape[2:])
         key = key.movedim((3, 4, 5), (1, 2, 3))
@@ -774,6 +775,7 @@ class PairedAttention(nn.Module):
         # query = F.layer_norm(self.map_query(x))
         query_batched = x_query.flatten(0, 1)
         query = self.map_query(query_batched)
+        print(key.shape, key_batched.shape, query, query_batched)
         query = query.view(x_query.shape[:2] + (-1,) + query.shape[2:])
         query = query.movedim((3, 4, 5), (1, 2, 3))
         # value = F.layer_norm(self.map_value(x))
