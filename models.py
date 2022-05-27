@@ -150,7 +150,7 @@ class CroppedNet(SimpleNet):
             device, 0
         )
         self.decoder = nn.ModuleList([
-            MultiheadedAttention(4, f_att, heads, 1)
+            MultiheadedAttention(3, f_att, heads, 1)
             for f_att in self.decoder_filters
         ])
 
