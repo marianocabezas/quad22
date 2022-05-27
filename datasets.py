@@ -148,19 +148,20 @@ def randomized_shift(center, size, patch_size, max_shift):
 
 class DiffusionDataset(Dataset):
     def __init__(
-            self, dmri, rois, directions, bvalues, patch_size=32,
-            overlap=0, min_lr=22, max_lr=22
-
+        self, dmri, rois, directions, bvalues, patch_size=32,
+        overlap=0, min_lr=22, max_lr=22, shift=True
     ):
         # Init
         if type(patch_size) is not tuple:
             self.patch_size = (patch_size,) * 3
         else:
             self.patch_size = patch_size
+        self.patch_half = tuple(ps // 2 for ps in self.patch_size)
         if type(overlap) is not tuple:
             self.overlap = (overlap,) * 3
         else:
             self.overlap = overlap
+        self.shift = shift
 
         self.images = dmri
         self.rois = rois
@@ -194,10 +195,13 @@ class DiffusionDataset(Dataset):
         dmri = self.images[case_idx]
 
         none_slice = (slice(None),)
-        shifted_center_i = randomized_shift(
-            center_i, dmri.shape, self.patch_size, self.patch_size // 2
-        )
-        slice_i = center_to_slice(shifted_center_i, self.patch_size // 2)
+        if self.shift:
+            shifted_center_i = randomized_shift(
+                center_i, dmri.shape, self.patch_size, self.patch_half
+            )
+            slice_i = center_to_slice(shifted_center_i, self.patch_half)
+        else:
+            slice_i = center_to_slice(center_i, self.patch_half)
 
         dmri = self.images[case_idx][none_slice + slice_i].astype(np.float32)
         dirs = self.directions[case_idx].astype(np.float32)

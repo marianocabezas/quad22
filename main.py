@@ -154,18 +154,18 @@ def train(config, net, training, validation, model_name, verbose=0):
             ival, rval, dval, bval = get_data(config, validation)
         if 'test_patch' in config and 'test_overlap' in config:
             val_dataset = DiffusionDataset(
-                ival, rval, dval, bval,
+                ival, rval, dval, bval, shift=False,
                 patch_size=config['test_patch'],
                 overlap=config['train_overlap']
             )
         elif 'test_patch' in config:
             val_dataset = DiffusionDataset(
-                ival, rval, dval, bval,
+                ival, rval, dval, bval, shift=False,
                 patch_size=config['test_patch']
             )
         else:
             val_dataset = DiffusionDataset(
-                ival, rval, dval, bval
+                ival, rval, dval, bval shift=False,
             )
 
         if verbose > 1:
