@@ -147,9 +147,14 @@ class CroppedNet(SimpleNet):
     ):
         super().__init__(
             encoder_filters, decoder_filters, heads,
-            device, verbose
+            device, 0
         )
-        self.crop = len(self.encoder_filters) + len(self.decoder_filters)
+        self.decoder = nn.ModuleList([
+            MultiheadedAttention(4, f_att, heads, 1)
+            for f_att in self.decoder_filters
+        ])
+
+        self.crop = len(self.encoder_filters)
         # <Loss function setup>
         self.train_functions = [
             {
@@ -166,6 +171,20 @@ class CroppedNet(SimpleNet):
                 'f': self.mse_loss
             }
         ]
+
+        # <Optimizer setup>
+        # We do this last step after all parameters are defined
+        model_params = filter(lambda p: p.requires_grad, self.parameters())
+        self.optimizer_alg = torch.optim.Adam(model_params)
+        if verbose > 1:
+            print(
+                'Network created on device {:} with training losses '
+                '[{:}] and validation losses [{:}]'.format(
+                    self.device,
+                    ', '.join([tf['name'] for tf in self.train_functions]),
+                    ', '.join([vf['name'] for vf in self.val_functions])
+                )
+            )
 
     def mse_loss(self, prediction, target):
         crop_slice = slice(self.crop, -self.crop)
