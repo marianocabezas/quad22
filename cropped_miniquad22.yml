@@ -1,0 +1,26 @@
+# Image information (names, path, etc)
+path: /data/MiniQuaD22
+image: dwi.nii.gz
+roi: dwi_mask.nii.gz
+bvecs: dwi.bvec
+bvals: dwi.bval
+
+# Training data information
+network: CroppedNet
+train_patch: 16
+train_batch: 1
+train_overlap: 0
+test_batch: 128
+test_patch: 16
+test_overlap: 24
+
+# Network hyperparameters and configuration
+heads: 16
+encoder_filters: [16, 16, 8, 8, 8]
+decoder_filters: [4, 4, 4]
+seeds: [42, 80702, 74794, 62021, 48497]
+val_split: 0
+epochs: 10
+patience: 10
+model_path: /data/MiniQuaD22
+folds: 5

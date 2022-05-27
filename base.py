@@ -813,10 +813,13 @@ class MultiheadedAttention(nn.Module):
         )
         features = self.final_block(sa)
         if features.shape != x_batched.shape:
-            x_batched = F.interpolate(
-                x_batched, size=features.size()[2:], mode='trilinear',
-                align_corners=True
+            crop = tuple(
+                slice(-(d_x - d_feat) // 2, -(d_x - d_feat) // 2)
+                for d_feat, d_x in zip(
+                    features.size()[2:], x_batched.size()[2:]
+                )
             )
+            x_batched = x_batched[(slice(None),) * 3 + crop]
         residual = features + x_batched
         return residual.view(x.shape[:3] + residual.shape[2:])
 
@@ -870,9 +873,12 @@ class MultiheadedPairedAttention(nn.Module):
         ], dim=1)
         features = self.final_block(sa)
         if features.shape != query_batched.shape:
-            query_batched = F.interpolate(
-                query_batched, size=features.size()[2:], mode='trilinear',
-                align_corners=True
+            crop = tuple(
+                slice(-(d_x - d_feat) // 2, -(d_x - d_feat) // 2)
+                for d_feat, d_x in zip(
+                    features.size()[2:], query_batched.size()[2:]
+                )
             )
+            query_batched = query_batched[(slice(None),) * 3 + crop]
         residual = features + query_batched
         return residual.view(query.shape[:3] + residual.shape[2:])

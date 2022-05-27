@@ -1,0 +1,26 @@
+# Image information (names, path, etc)
+path: /data/QuaD22
+image: dwi.nii.gz
+roi: dwi_mask.nii.gz
+bvecs: dwi.bvec
+bvals: dwi.bval
+
+# Training data information
+network: CroppedNet
+train_patch: 32
+train_batch: 1
+train_overlap: 14
+test_batch: 4
+test_patch: 16
+test_overlap: 14
+
+# Network hyperparameters and configuration
+heads: 32
+encoder_filters: [8, 8, 8, 8]
+decoder_filters: [8, 8, 8]
+seeds: [42, 80702, 74794, 62021, 48497]
+val_split: 0
+epochs: 5
+patience: 5
+model_path: /data/QuaD22
+folds: 5
