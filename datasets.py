@@ -17,7 +17,8 @@ def tokenize(dmri, directions, bvalues):
         np.expand_dims(bvalues, axis=(1, 2, 3, 4)),
         bvalues.shape + hr_dmri.shape[1:]
     )
-    hr_data = np.concatenate([hr_bvalues, hr_dir, hr_dmri], axis=1)
+    # hr_data = np.concatenate([hr_bvalues, hr_dir, hr_dmri], axis=1)
+    hr_data = np.concatenate([hr_dir, hr_dmri], axis=1)
 
     return hr_data
 
