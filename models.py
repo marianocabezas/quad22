@@ -149,7 +149,7 @@ class CroppedNet(SimpleNet):
             encoder_filters, decoder_filters, heads,
             device, verbose
         )
-        self.crop = len(self.encoder_filters) + self.decoder_filters
+        self.crop = len(self.encoder_filters) + len(self.decoder_filters)
         # <Loss function setup>
         self.train_functions = [
             {
