@@ -169,6 +169,10 @@ class CroppedNet(SimpleNet):
 
     def mse_loss(self, prediction, target):
         crop_slice = slice(self.crop, -self.crop)
+        print(
+            prediction.shape,
+            target[..., crop_slice, crop_slice, crop_slice].shape
+        )
         loss = F.mse_loss(
             prediction, target[..., crop_slice, crop_slice, crop_slice]
         )
