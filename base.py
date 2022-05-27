@@ -715,7 +715,6 @@ class SelfAttention(nn.Module):
     def forward(self, x):
         # key = F.layer_norm(self.map_key(x))
         x_batched = x.flatten(0, 1)
-        print(x.shape, x_batched.shape)
         key = self.map_key(x_batched)
         key = key.view(x.shape[:2] + (-1,) + key.shape[2:])
         key = key.movedim((3, 4, 5), (1, 2, 3))

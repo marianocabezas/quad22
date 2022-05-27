@@ -204,7 +204,6 @@ class DiffusionDataset(Dataset):
             slice_i = center_to_slice(center_i, self.patch_half)
 
         patch = dmri[none_slice + slice_i].astype(np.float32)
-        print(patch.shape)
         dirs = self.directions[case_idx].astype(np.float32)
         bvalues = self.bvalues[case_idx].astype(np.float32)
         if self.min_lr == self.max_lr:
