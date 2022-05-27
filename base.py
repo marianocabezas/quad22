@@ -697,19 +697,18 @@ class SelfAttention(nn.Module):
             norm=partial(torch.softmax, dim=1)
     ):
         super().__init__()
-        padding = kernel // 2
         self.features = att_features
         self.map_key = nn.Conv3d(
             in_channels=in_features, out_channels=att_features,
-            kernel_size=kernel, padding=padding
+            kernel_size=kernel
         )
         self.map_query = nn.Conv3d(
             in_channels=in_features, out_channels=att_features,
-            kernel_size=kernel, padding=padding
+            kernel_size=kernel
         )
         self.map_value = nn.Conv3d(
             in_channels=in_features, out_channels=in_features,
-            kernel_size=kernel, padding=padding
+            kernel_size=kernel
         )
         self.norm = norm
 

@@ -134,3 +134,145 @@ class SimpleNet(BaseModel):
         dwi_flat = self.final(feat_flat)
 
         return dwi_flat.view(feat.shape[:2] + feat.shape[3:])
+
+
+class CroppedNet(SimpleNet):
+    def __init__(
+            self,
+            encoder_filters=None, decoder_filters=None, heads=32,
+            device=torch.device(
+                "cuda:0" if torch.cuda.is_available() else "cpu"
+            ),
+            verbose=0,
+    ):
+        super().__init__(
+            encoder_filters, decoder_filters, heads,
+            device, verbose
+        )
+        self.crop = len(self.encoder_filters) + self.decoder_filters
+        # <Loss function setup>
+        self.train_functions = [
+            {
+                'name': 'mse',
+                'weight': 1,
+                'f': self.mse_loss
+            }
+        ]
+
+        self.val_functions = [
+            {
+                'name': 'mse',
+                'weight': 1,
+                'f': self.mse_loss
+            }
+        ]
+
+    def mse_loss(self, prediction, target):
+        crop_slice = slice(self.crop, -self.crop)
+        loss = F.mse_loss(
+            prediction, target[..., crop_slice, crop_slice, crop_slice]
+        )
+        return loss
+
+    def patch_inference(
+        self, data, patch_size, batch_size, case=0, n_cases=1, t_start=None
+    ):
+        # Init
+        self.eval()
+
+        # Init
+        t_in = time.time()
+        if t_start is None:
+            t_start = t_in
+
+        # This branch is only used when images are too big. In this case
+        # they are split in patches and each patch is trained separately.
+        # Currently, the image is partitioned in blocks with no overlap,
+        # however, it might be a good idea to sample all possible patches,
+        # test them, and average the results. I know both approaches
+        # produce unwanted artifacts, so I don't know.
+        # Initial results. Filled to 0.
+        if isinstance(data, tuple):
+            data_shape = data[1].shape[:1] + data[1].shape[-3:]
+        else:
+            data_shape = data.shape[:1] + data.shape[-3:]
+        seg = np.zeros(data_shape)
+        counts = np.zeros(data_shape)
+
+        # The following lines are just a complicated way of finding all
+        # the possible combinations of patch indices.
+        steps = [
+            list(
+                range(0, lim - patch_size, patch_size - self.crop * 2)
+            ) + [lim - patch_size]
+            for lim in data_shape[1:]
+        ]
+
+        steps_product = list(itertools.product(*steps))
+        batches = range(0, len(steps_product), batch_size)
+        n_batches = len(batches)
+
+        # The following code is just a normal test loop with all the
+        # previously computed patches.
+        for bi, batch in enumerate(batches):
+            # Here we just take the current patch defined by its slice
+            # in the x and y axes. Then we convert it into a torch
+            # tensor for testing.
+            in_slices = [
+                (
+                    slice(xi, xi + patch_size),
+                    slice(xj, xj + patch_size),
+                    slice(xk, xk + patch_size)
+                )
+                for xi, xj, xk in steps_product[batch:(batch + batch_size)]
+            ]
+            out_slices = [
+                (
+                    slice(xi + self.crop, xi + patch_size - self.crop),
+                    slice(xj + self.crop, xj + patch_size - self.crop),
+                    slice(xk + self.crop, xk + patch_size - self.crop)
+                )
+                for xi, xj, xk in steps_product[batch:(batch + batch_size)]
+            ]
+
+            # Testing itself.
+            with torch.no_grad():
+                if isinstance(data, list) or isinstance(data, tuple):
+                    batch_cuda = tuple(
+                        torch.stack([
+                            torch.from_numpy(
+                                x_i[
+                                    slice(None), slice(None),
+                                    xslice, yslice, zslice
+                                ]
+                            ).type(torch.float32).to(self.device)
+                            for xslice, yslice, zslice in in_slices
+                        ])
+                        for x_i in data
+                    )
+                    seg_out = self(*batch_cuda)
+                else:
+                    batch_cuda = torch.stack([
+                        torch.from_numpy(
+                            data[
+                                slice(None), slice(None),
+                                xslice, yslice, zslice
+                            ]
+                        ).type(torch.float32).to(self.device)
+                        for xslice, yslice, zslice in in_slices
+                    ])
+                    seg_out = self(batch_cuda)
+                torch.cuda.empty_cache()
+
+            # Then we just fill the results image.
+            for si, (xslice, yslice, zslice) in enumerate(out_slices):
+                counts[slice(None), xslice, yslice, zslice] += 1
+                seg_bi = seg_out[si, :].cpu().numpy()
+                seg[slice(None), xslice, yslice, zslice] += seg_bi
+
+            # Printing
+            self.print_batch(bi, n_batches, case, n_cases, t_start, t_in)
+
+        seg /= counts
+
+        return seg

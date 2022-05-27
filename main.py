@@ -1,4 +1,5 @@
 import argparse
+import importlib
 import os
 import math
 import time
@@ -247,10 +248,16 @@ def main():
         os.mkdir(model_path)
     d_path = config['path']
     seeds = config['seeds']
+    models = importlib.import_module('models')
+    network_class = getattr(models, config['network'])
     try:
-        filters = config['filters']
+        encoder_filters = config['encoder_filters']
     except KeyError:
-        filters = None
+        encoder_filters = None
+    try:
+        decoder_filters = config['decoder_filters']
+    except KeyError:
+        decoder_filters = None
     try:
         heads = config['heads']
     except KeyError:
@@ -280,7 +287,11 @@ def main():
         random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
-        net = SimpleNet(encoder_filters=filters, heads=heads)
+        net = network_class(
+            encoder_filters=encoder_filters,
+            decoder_filters=decoder_filters,
+            heads=heads
+        )
         starting_model = os.path.join(
             model_path, 'simple-quad22-start.s{:05d}.pt'.format(seed),
         )
