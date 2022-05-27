@@ -819,7 +819,7 @@ class MultiheadedAttention(nn.Module):
                     features.size()[2:], x_batched.size()[2:]
                 )
             )
-            x_batched = x_batched[(slice(None),) * 3 + crop]
+            x_batched = x_batched[(slice(None),) * 2 + crop]
         residual = features + x_batched
         return residual.view(x.shape[:3] + residual.shape[2:])
 
@@ -879,6 +879,6 @@ class MultiheadedPairedAttention(nn.Module):
                     features.size()[2:], query_batched.size()[2:]
                 )
             )
-            query_batched = query_batched[(slice(None),) * 3 + crop]
+            query_batched = query_batched[(slice(None),) * 2 + crop]
         residual = features + query_batched
         return residual.view(query.shape[:3] + residual.shape[2:])
