@@ -35,8 +35,6 @@ class BaseModel(nn.Module):
         self.epoch = 0
         self.t_train = 0
         self.t_val = 0
-        self.dropout = 0
-        self.final_dropout = 0
         self.ann_rate = 0
         self.best_loss_tr = np.inf
         self.best_loss_val = np.inf
@@ -137,10 +135,6 @@ class BaseModel(nn.Module):
             loss_value = batch_loss.tolist()
             losses.append(loss_value)
 
-            # Curriculum dropout / Adaptive dropout
-            # Here we could modify dropout to be updated for each batch.
-            # (1 - rho) * exp(- gamma * t) + rho, gamma > 0
-
             self.print_progress(
                 batch_i, n_batches, loss_value, np.mean(losses)
             )
@@ -179,8 +173,7 @@ class BaseModel(nn.Module):
         ]
         l_bars = '--|--'.join(
             ['-' * 5] * 2 +
-            ['-' * 6] * (len(l_names[2:]) + len(acc_names)) +
-            ['-' * 3]
+            ['-' * 6] * (len(l_names[2:]) + len(acc_names))
         )
         l_hdr = '  |  '.join(l_names + acc_names + ['drp'])
         # Since we haven't trained the network yet, we'll assume that the
@@ -230,15 +223,13 @@ class BaseModel(nn.Module):
                     t_out = time.time() - self.t_val
                     t_s = time_to_string(t_out)
 
-                    drop_s = '{:5.3f}'.format(self.dropout)
-
                     print('\033[K', end='')
                     whites = ' '.join([''] * 12)
                     print('{:}Epoch num |  {:}  |'.format(whites, l_hdr))
                     print('{:}----------|--{:}--|'.format(whites, l_bars))
                     final_s = whites + ' | '.join(
                         [epoch_s, tr_loss_s, loss_s] +
-                        losses_s + acc_s + [drop_s, t_s]
+                        losses_s + acc_s + [t_s]
                     )
                     print(final_s)
         else:
@@ -317,19 +308,16 @@ class BaseModel(nn.Module):
             t_out = time.time() - self.t_train
             t_s = time_to_string(t_out)
 
-            drop_s = '{:5.3f}'.format(self.dropout)
-            self.dropout_update()
-
             if verbose:
                 print('\033[K', end='')
                 whites = ' '.join([''] * 12)
                 final_s = whites + ' | '.join(
                     [epoch_s, tr_loss_s, loss_s] +
-                    losses_s + acc_s + [drop_s, t_s]
+                    losses_s + acc_s + [t_s]
                 )
                 print(final_s)
 
-            if no_improv_e == int(patience / (1 - self.dropout)):
+            if no_improv_e == patience:
                 break
 
             self.epoch_update(epochs, train_loader)
@@ -524,19 +512,6 @@ class BaseModel(nn.Module):
         :return: Nothing.
         """
         return None
-
-    def dropout_update(self):
-        """
-        Callback function to update the dropout. To be reimplemented
-        if necessary. However, the main method already has some basic
-        scheduling
-        :param epochs: Maximum number of epochs
-        :return: Nothing.
-        """
-        if self.final_dropout <= self.dropout:
-            self.dropout = max(
-                self.final_dropout, self.dropout - self.ann_rate
-            )
 
     def print_progress(self, batch_i, n_batches, b_loss, mean_loss):
         """
