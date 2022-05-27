@@ -775,7 +775,6 @@ class PairedAttention(nn.Module):
         # query = F.layer_norm(self.map_query(x))
         query_batched = x_query.flatten(0, 1)
         query = self.map_query(query_batched)
-        print(key.shape, key_batched.shape, query.shape, query_batched.shape)
         query = query.view(x_query.shape[:2] + (-1,) + query.shape[2:])
         query = query.movedim((3, 4, 5), (1, 2, 3))
         # value = F.layer_norm(self.map_value(x))
