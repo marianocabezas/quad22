@@ -197,7 +197,7 @@ class DiffusionDataset(Dataset):
         none_slice = (slice(None),)
         if self.shift:
             shifted_center_i = randomized_shift(
-                center_i, dmri.shape, self.patch_size, self.patch_half
+                center_i, dmri.shape[1:], self.patch_size, self.patch_half
             )
             slice_i = center_to_slice(shifted_center_i, self.patch_half)
         else:
