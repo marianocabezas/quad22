@@ -814,7 +814,7 @@ class MultiheadedAttention(nn.Module):
         features = self.final_block(sa)
         if features.shape != x_batched.shape:
             crop = tuple(
-                slice(-(d_x - d_feat) // 2, -(d_x - d_feat) // 2)
+                slice((d_x - d_feat) // 2, -(d_x - d_feat) // 2)
                 for d_feat, d_x in zip(
                     features.size()[2:], x_batched.size()[2:]
                 )
@@ -874,7 +874,7 @@ class MultiheadedPairedAttention(nn.Module):
         features = self.final_block(sa)
         if features.shape != query_batched.shape:
             crop = tuple(
-                slice(-(d_x - d_feat) // 2, -(d_x - d_feat) // 2)
+                slice((d_x - d_feat) // 2, -(d_x - d_feat) // 2)
                 for d_feat, d_x in zip(
                     features.size()[2:], query_batched.size()[2:]
                 )
