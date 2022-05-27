@@ -175,7 +175,7 @@ class BaseModel(nn.Module):
             ['-' * 5] * 2 +
             ['-' * 6] * (len(l_names[2:]) + len(acc_names))
         )
-        l_hdr = '  |  '.join(l_names + acc_names + ['drp'])
+        l_hdr = '  |  '.join(l_names + acc_names)
         # Since we haven't trained the network yet, we'll assume that the
         # initial values are the best ones.
         self.best_state = deepcopy(self.state_dict())
