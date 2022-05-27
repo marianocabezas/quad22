@@ -132,7 +132,7 @@ def get_centers(masks, patch_size, overlap):
 
 def randomized_shift(center, size, patch_size, max_shift):
     shift = tuple(
-        np.random.randint(max_shift_i, max_shift_i, 1)
+        np.random.randint(-max_shift_i, max_shift_i, 1)
         for max_shift_i in max_shift
     )
     new_center = tuple(
