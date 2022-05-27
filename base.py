@@ -714,20 +714,17 @@ class SelfAttention(nn.Module):
 
     def forward(self, x):
         # key = F.layer_norm(self.map_key(x))
-        x_batched = x.view((-1,) + x.shape[2:])
-        key = self.map_key(x_batched).view(
-            x.shape[:2] + (-1,) + x.shape[3:]
-        )
+        x_batched = x.flatten(0, 1)
+        key = self.map_key(x_batched)
+        key = key.view(x.shape[:2] + (-1,) + key.shape[3:])
         key = key.movedim((3, 4, 5), (1, 2, 3))
         # query = F.layer_norm(self.map_query(x))
-        query = self.map_query(x_batched).view(
-            x.shape[:2] + (-1,) + x.shape[3:]
-        )
+        query = self.map_query(x_batched)
+        query = query.view(x.shape[:2] + (-1,) + query.shape[3:])
         query = query.movedim((3, 4, 5), (1, 2, 3))
         # value = F.layer_norm(self.map_value(x))
-        value = self.map_value(x_batched).view(
-            x.shape[:2] + (-1,) + x.shape[3:]
-        )
+        value = self.map_value(x_batched)
+        value = value.view(x.shape[:2] + (-1,) + value.shape[3:])
         value = value.movedim((3, 4, 5), (1, 2, 3))
 
         att = torch.matmul(key, query.transpose(-1, -2))
@@ -770,21 +767,18 @@ class PairedAttention(nn.Module):
 
     def forward(self, x_key, x_query):
         # key = F.layer_norm(self.map_key(x))
-        key_batched = x_key.view((-1,) + x_key.shape[2:])
-        key = self.map_key(key_batched).view(
-            x_key.shape[:2] + (-1,) + x_key.shape[3:]
-        )
+        key_batched = x_key.flatten(0, 1)
+        key = self.map_key(key_batched)
+        key = key.view(x_key.shape[:2] + (-1,) + key.shape[3:])
         key = key.movedim((3, 4, 5), (1, 2, 3))
         # query = F.layer_norm(self.map_query(x))
-        query_batched = x_query.view((-1,) + x_query.shape[2:])
-        query = self.map_query(query_batched).view(
-            x_query.shape[:2] + (-1,) + x_query.shape[3:]
-        )
+        query_batched = x_query.flatten(0, 1)
+        query = self.map_query(query_batched)
+        query = query.view(x_query.shape[:2] + (-1,) + x_query.shape[3:])
         query = query.movedim((3, 4, 5), (1, 2, 3))
         # value = F.layer_norm(self.map_value(x))
-        value = self.map_value(key_batched).view(
-            x_key.shape[:2] + (-1,) + x_key.shape[3:]
-        )
+        value = self.map_value(key_batched)
+        value = value.view(x_key.shape[:2] + (-1,) + value.shape[3:])
         value = value.movedim((3, 4, 5), (1, 2, 3))
 
         att = torch.matmul(key, query.transpose(-1, -2))
