@@ -136,7 +136,7 @@ def randomized_shift(center, size, patch_size, max_shift):
         for max_shift_i in max_shift
     )
     new_center = tuple(
-        min(max(c + sh, p // 2), s - p // 2)
+        int(min(max(c + sh, p // 2), s - p // 2))
         for c, sh, s, p in zip(center, shift, size, patch_size)
     )
 
