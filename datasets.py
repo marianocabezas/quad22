@@ -30,15 +30,18 @@ def centers_to_slice(voxels, patch_half):
     :param patch_half: List of integer halves (//) of the patch_size.
     """
     slices = [
-        tuple(
-            [
-                slice(idx - p_len, idx + p_len) for idx, p_len in zip(
-                    voxel, patch_half
-                )
-            ]
-        ) for voxel in voxels
+        center_to_slice(voxel, patch_half) for voxel in voxels
     ]
     return slices
+
+
+def center_to_slice(voxel, patch_half):
+    slice_i = tuple(
+        slice(idx - p_len, idx + p_len)
+        for idx, p_len in zip(voxel, patch_half)
+    )
+
+    return slice_i
 
 
 def get_slices(masks, patch_size, overlap):
@@ -89,6 +92,57 @@ def get_slices(masks, patch_size, overlap):
     return patch_slices
 
 
+def get_centers(masks, patch_size, overlap):
+    """
+    Function to get all the patches with a given patch size and overlap between
+    consecutive patches from a given list of masks. We will only take patches
+    inside the bounding box of the mask. We could probably just pass the shape
+    because the masks should already be the bounding box.
+    :param masks: List of masks.
+    :param patch_size: Size of the patches.
+    :param overlap: Overlap on each dimension between consecutive patches.
+
+    """
+    # Init
+    # We will compute some intermediate stuff for later.
+    patch_half = [p_length // 2 for p_length in patch_size]
+    steps = [max(p_length - o, 1) for p_length, o in zip(patch_size, overlap)]
+
+    # We will need to define the min and max pixel indices. We define the
+    # centers for each patch, so the min and max should be defined by the
+    # patch halves.
+    min_bb = [patch_half] * len(masks)
+    max_bb = [
+        [
+            max_i - p_len for max_i, p_len in zip(mask.shape, patch_half)
+        ] for mask in masks
+    ]
+
+    # This is just a "pythonic" but complex way of defining all possible
+    # indices given a min, max and step values for each dimension.
+    dim_ranges = [
+        map(
+            lambda t: np.concatenate([np.arange(*t), [t[1]]]),
+            zip(min_bb_i, max_bb_i, steps)
+        ) for min_bb_i, max_bb_i in zip(min_bb, max_bb)
+    ]
+
+    return [list(itertools.product(*dim_range)) for dim_range in dim_ranges]
+
+
+def randomized_shift(center, size, patch_size, max_shift):
+    shift = tuple(
+        np.random.randint(max_shift_i, max_shift_i, 1)
+        for max_shift_i in max_shift
+    )
+    new_center = tuple(
+        min(max(c + sh, p // 2), s - p // 2)
+        for c, sh, s, p in zip(center, shift, size, patch_size)
+    )
+
+    return new_center
+
+
 ''' Datasets '''
 
 
@@ -96,6 +150,7 @@ class DiffusionDataset(Dataset):
     def __init__(
             self, dmri, rois, directions, bvalues, patch_size=32,
             overlap=0, min_lr=22, max_lr=22
+
     ):
         # Init
         if type(patch_size) is not tuple:
@@ -123,20 +178,26 @@ class DiffusionDataset(Dataset):
             self.max_lr = max_lr
 
         # We get the preliminary patch slices (inside the bounding box)...
-        slices = get_slices(self.rois, self.patch_size, self.overlap)
+        slices = get_centers(self.rois, self.patch_size, self.overlap)
 
         # ... however, being inside the bounding box doesn't guarantee that the
         # patch itself will contain any lesion voxels. Since, the lesion class
         # is extremely underrepresented, we will filter this preliminary slices
         # to guarantee that we only keep the ones that contain at least one
         # lesion voxel.
-        self.patch_slices = [
+        self.patch_centers = [
             (s, i) for i, s_i in enumerate(slices) for s in s_i
         ]
 
     def __getitem__(self, index):
-        slice_i, case_idx = self.patch_slices[index]
+        center_i, case_idx = self.patch_centers[index]
+        dmri = self.images[case_idx]
+
         none_slice = (slice(None),)
+        shifted_center_i = randomized_shift(
+            center_i, dmri.shape, self.patch_size, self.patch_size // 2
+        )
+        slice_i = center_to_slice(shifted_center_i, self.patch_size // 2)
 
         dmri = self.images[case_idx][none_slice + slice_i].astype(np.float32)
         dirs = self.directions[case_idx].astype(np.float32)
@@ -153,4 +214,4 @@ class DiffusionDataset(Dataset):
         return (key_data, query_data), target_data
 
     def __len__(self):
-        return len(self.patch_slices)
+        return len(self.patch_centers)
