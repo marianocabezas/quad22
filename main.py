@@ -165,7 +165,7 @@ def train(config, net, training, validation, model_name, verbose=0):
             )
         else:
             val_dataset = DiffusionDataset(
-                ival, rval, dval, bval shift=False,
+                ival, rval, dval, bval, shift=False
             )
 
         if verbose > 1:
