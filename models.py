@@ -76,7 +76,7 @@ class SimpleNet(BaseModel):
         )
         self.decoder = nn.ModuleList([
             MultiheadedAttention(4, f_att, heads, 3)
-            for f_att in self.encoder_filters
+            for f_att in self.decoder_filters
         ])
         self.decoder.to(self.device)
         self.final = nn.Conv3d(4, 1, 1)
@@ -169,10 +169,6 @@ class CroppedNet(SimpleNet):
 
     def mse_loss(self, prediction, target):
         crop_slice = slice(self.crop, -self.crop)
-        print(
-            prediction.shape,
-            target[..., crop_slice, crop_slice, crop_slice].shape
-        )
         loss = F.mse_loss(
             prediction, target[..., crop_slice, crop_slice, crop_slice]
         )
