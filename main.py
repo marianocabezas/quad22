@@ -214,9 +214,14 @@ def test(
         token = tokenize(hr_image, directions, bvalues)
         key_data = token[:22, ...]
         query_data = token[22:, :-1, ...]
+        # extra_image = net.patch_inference(
+        #     (key_data, query_data), config['test_patch'], config['test_batch'],
+        #     sub_i, len(testing_subjects), test_start
+        # )
         extra_image = net.patch_inference(
-            (key_data, query_data), config['test_patch'], config['test_batch'],
-            sub_i, len(testing_subjects), test_start
+            (key_data, query_data), config['test_patch'],
+            config['test_patch'] - 1, sub_i, len(testing_subjects),
+            test_start
         )
         hr_prediction = np.concatenate([lr_image, extra_image])
         image_nii = nibabel.load(find_file(config['image'], p_path))
