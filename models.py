@@ -237,7 +237,7 @@ class PositionalNet(BaseModel):
             data = sa(data, None, positional)
         for sa in self.decoder:
             sa.to(self.device)
-            data = sa(data, positional)
+            data = sa(data, None, positional)
 
         feat_flat = data.flatten(0, 1)
         self.final.to(self.device)

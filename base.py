@@ -744,7 +744,7 @@ class MultiheadedAttention(nn.Module):
 
     def __init__(
         self, key_features, query_features, att_features, heads=32, kernel=1,
-        positional_embedding=None, norm=partial(torch.softmax, dim=1),
+        norm=partial(torch.softmax, dim=1),
     ):
         super().__init__()
         self.blocks = heads
