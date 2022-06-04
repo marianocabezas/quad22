@@ -54,10 +54,10 @@ def get_subject(config, p_path):
         bvecs = []
         for s_i in f.readlines():
             bvecs.append([float(bvec) for bvec in s_i.split(' ')])
-        bvecs_array = np.stack(bvecs, axis=-1)
+        bvecs_array = np.stack(bvecs, axis=-1)[1:, :]
     with open(bvals_file) as f:
         for s_i in f.readlines():
-            bvals_array = np.array([int(bval) for bval in s_i.split('  ')])
+            bvals_array = np.array([int(bval) for bval in s_i.split('  ')])[1:]
     bvals_array = np.expand_dims(bvals_array, axis=(1, 2, 3))
     invalid_mask = raw_image[1:] <= 0
     raw_image[raw_image <= 0] = 1e-6
