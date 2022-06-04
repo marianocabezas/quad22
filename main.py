@@ -238,7 +238,7 @@ def test(
                 test_start
             )
             extra_bvalues = np.expand_dims(bvalues[21:], axis=(1, 2, 3))
-            extra_image = extra_bvalues * extra_image + log_b0
+            extra_image = np.exp(extra_bvalues * extra_image + log_b0)
         else:
             extra_image = net.patch_inference(
                 lr_image, config['test_patch'], config['test_patch'] - 1,
