@@ -163,7 +163,7 @@ class DiffusionDataset(Dataset):
         self.tensors = tensors
         self.rois = rois
         self.directions = directions
-        n_directions = [len(bvalue) > 7 for bvalue in self.bvalues]
+        n_directions = [len(bvec) > 7 for bvec in self.directions]
         assert np.all(n_directions), 'The inputs are already low resolution'
         if min_lr < 7:
             self.min_lr = 7

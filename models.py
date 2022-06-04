@@ -1,10 +1,8 @@
 import time
-import itertools
 import torch
 from torch import nn
 import torch.nn.functional as F
-import numpy as np
-from base import BaseModel, ResConv3dBlock
+from base import BaseModel
 from base import MultiheadedAttention
 from utils import time_to_string
 
