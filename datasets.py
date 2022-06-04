@@ -231,6 +231,10 @@ class PositionalDiffusionDataset(DiffusionDataset):
         center_i, case_idx = self.patch_centers[index]
         dmri = self.images[case_idx]
         dti = self.tensors[case_idx]
+        if self.min_lr == self.max_lr:
+            lr_end = self.min_lr
+        else:
+            lr_end = np.random.randint(self.min_lr, self.max_lr, 1)
 
         none_slice = (slice(None),)
         if self.shift:
@@ -245,11 +249,7 @@ class PositionalDiffusionDataset(DiffusionDataset):
             dmri[none_slice + slice_i].astype(np.float32), 1
         )
         target_data = dti[none_slice + slice_i].astype(np.float32)
-        dirs = self.directions[case_idx].astype(np.float32)
-        if self.min_lr == self.max_lr:
-            lr_end = self.min_lr
-        else:
-            lr_end = np.random.randint(self.min_lr, self.max_lr, 1)
+        dirs = self.directions[case_idx].astype(np.float32)[:lr_end, ...]
 
         data = deepcopy(patch[:lr_end, ...])
 
