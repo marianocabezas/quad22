@@ -65,7 +65,7 @@ class SimpleNet(BaseModel):
         ])
         self.key_encoder.to(self.device)
         self.query_encoder = nn.ModuleList([
-            MultiheadedAttention(3, f_att, heads, 3)
+            MultiheadedAttention(3, 3, f_att, heads, 3)
             for f_att in self.encoder_filters
         ])
         self.query_encoder.to(self.device)
