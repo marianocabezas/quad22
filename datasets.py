@@ -241,7 +241,9 @@ class PositionalDiffusionDataset(DiffusionDataset):
         else:
             slice_i = center_to_slice(center_i, self.patch_half)
 
-        patch = np.expand_dims(dmri[none_slice + slice_i].astype(np.float32), 1)
+        patch = np.expand_dims(
+            dmri[none_slice + slice_i].astype(np.float32), 1
+        )
         target_data = dti[none_slice + slice_i].astype(np.float32)
         dirs = self.directions[case_idx].astype(np.float32)
         if self.min_lr == self.max_lr:
