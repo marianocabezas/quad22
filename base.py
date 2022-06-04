@@ -725,6 +725,7 @@ class SelfAttention(nn.Module):
         att = torch.matmul(key, query.transpose(-1, -2))
         att_map = self.norm(att / np.sqrt(self.features))
         if positional is not None:
+            print(att_map.shape, positional.shape)
             att_map = att_map + positional
         features = torch.matmul(
             value.transpose(-1, -2), att_map
