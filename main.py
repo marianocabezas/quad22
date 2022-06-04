@@ -117,7 +117,7 @@ def train(config, net, training, validation, model_name, verbose=0):
     except IOError:
 
         if verbose > 1:
-            print('Preparing the training datasets / dataloaders')
+            print('\033[KPreparing the training datasets / dataloaders')
 
         # Training
         if verbose > 1:
