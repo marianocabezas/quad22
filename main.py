@@ -47,6 +47,7 @@ def get_subject(config, p_path):
     image_name = find_file(config['image'], p_path)
     raw_image = np.moveaxis(nibabel.load(image_name).get_fdata(), -1, 0)
     tensor = nibabel.load(find_file(config['tensor'], p_path)).get_fdata()
+    tensor = np.moveaxis(tensor, -1, 0)
     roi = get_mask(find_file(config['roi'], p_path))
     bvecs_file = find_file(config['bvecs'], p_path)
     bvals_file = find_file(config['bvals'], p_path)
@@ -59,14 +60,19 @@ def get_subject(config, p_path):
         for s_i in f.readlines():
             bvals_array = np.array([int(bval) for bval in s_i.split('  ')])[1:]
     bvals_array = np.expand_dims(bvals_array, axis=(1, 2, 3))
-    invalid_mask = raw_image[1:] <= 0
-    raw_image[raw_image <= 0] = 1e-6
-    norm_image = (np.log(raw_image[:1]) - np.log(raw_image[1:])) / bvals_array
-    norm_image[invalid_mask] = 0
-    norm_image[np.isnan(norm_image)] = 0
-    norm_image[np.isinf(norm_image)] = 0
+    b0 = raw_image[:1]
+    dmri = raw_image[1:]
+    invalid_b0 = b0 <= 0
+    invalid_dmri = dmri <= 0
+    b0[invalid_b0] = 1e-6
+    log_b0 = np.log(b0)
+    log_b0[invalid_b0] = 0
+    dmri[invalid_dmri] = 1e-6
+    log_dmri = np.log(dmri)
+    log_dmri[invalid_dmri] = 0
+    norm_image = (log_b0 - log_dmri) / bvals_array
 
-    return norm_image, tensor, roi, bvecs_array, bvals_array
+    return norm_image, log_b0, tensor, roi, bvecs_array, bvals_array
 
 
 def get_data(config, subjects):
@@ -89,7 +95,9 @@ def get_data(config, subjects):
             ), end='\r'
         )
         p_path = os.path.join(d_path, p)
-        image, tensor, roi, directions, bvalues = get_subject(config, p_path)
+        image, _, tensor, roi, directions, bvalues = get_subject(
+            config, p_path
+        )
 
         images.append(image)
         tensors.append(tensor)
@@ -217,7 +225,9 @@ def test(
 
         p_path = os.path.join(config['path'], subject)
         mask_path = os.path.join(p_path, mask_name)
-        hr_image, tensor, _, directions, bvalues = get_subject(config, p_path)
+        hr_image, log_b0, tensor, _, directions, bvalues = get_subject(
+            config, p_path
+        )
         lr_image = hr_image[:21, ...]
         if config['tokenize']:
             token = tokenize(hr_image, directions)
@@ -227,6 +237,8 @@ def test(
                 None, sub_i, len(testing_subjects),
                 test_start
             )
+            extra_bvalues = np.expand_dims(bvalues[21:], axis=(1, 2, 3))
+            extra_image = extra_bvalues * extra_image + log_b0
         else:
             extra_image = net.patch_inference(
                 lr_image, config['test_patch'], config['test_patch'] - 1,
