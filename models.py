@@ -230,12 +230,14 @@ class PositionalNet(BaseModel):
 
     def forward(self, data, bvecs):
         positional = torch.matmul(bvecs, bvecs.transpose(1, 2))
+        new_shape = positional.shape[:1] + (1,) * 3 + positional.shape[-2:]
+        positional = positional.view(new_shape)
         for sa in self.encoder:
             sa.to(self.device)
             data = sa(data, None, positional)
         for sa in self.decoder:
             sa.to(self.device)
-            data = sa(data)
+            data = sa(data, positional)
 
         feat_flat = data.flatten(0, 1)
         self.final.to(self.device)
