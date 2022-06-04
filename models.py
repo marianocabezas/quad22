@@ -70,7 +70,7 @@ class SimpleNet(BaseModel):
         ])
         self.query_encoder.to(self.device)
         self.bottleneck = MultiheadedAttention(
-            4, 3, self.encoder_filters[-1], heads, 3
+            4, 3, self.encoder_filters[-1], heads, 1
         )
         self.bottleneck.to(self.device)
         self.decoder = nn.ModuleList([
