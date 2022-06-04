@@ -44,11 +44,10 @@ def parse_inputs():
 
 
 def get_subject(config, p_path):
-    roi = get_mask(find_file(config['roi'], p_path))
     image_name = find_file(config['image'], p_path)
-    tensor_name = find_file(config['tensor'], p_path)
-    tensor = nibabel.load(tensor_name).get_fdata()
-    raw_image = nibabel.load(image_name).get_fdata()
+    raw_image = np.moveaxis(nibabel.load(image_name).get_fdata(), -1, 0)
+    tensor = nibabel.load(find_file(config['tensor'], p_path)).get_fdata()
+    roi = get_mask(find_file(config['roi'], p_path))
     bvecs_file = find_file(config['bvecs'], p_path)
     bvals_file = find_file(config['bvals'], p_path)
     with open(bvecs_file) as f:
