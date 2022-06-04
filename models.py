@@ -241,6 +241,7 @@ class PositionalNet(BaseModel):
 
         feat_flat = data.flatten(0, 1)
         self.final.to(self.device)
-        dwi_flat = self.final(feat_flat)
+        dti_flat = self.final(feat_flat)
+        dti_shape = data.shape[:2] + dti_flat.shape[1:2] + data.shape[3:]
 
-        return torch.sum(dwi_flat.view(data.shape[:2] + data.shape[3:]), dim=1)
+        return torch.sum(dti_flat.view(dti_shape), dim=1)
