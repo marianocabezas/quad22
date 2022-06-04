@@ -372,8 +372,9 @@ class BaseModel(nn.Module):
 
         return np_output
 
-    def patch_inference(self, data, patch_size, batch_size,
-        case=0, n_cases=1, t_start=None
+    def patch_inference(
+            self, data, patch_size, batch_size, directions=None, case=0, n_cases=1,
+            t_start=None
     ):
         # Init
         self.eval()
@@ -401,7 +402,7 @@ class BaseModel(nn.Module):
         # the possible combinations of patch indices.
         steps = [
             list(
-                range(0, lim - patch_size, patch_size // 4)
+                range(0, lim - patch_size, patch_size - self.crop * 2)
             ) + [lim - patch_size]
             for lim in data_shape[1:]
         ]
@@ -416,11 +417,19 @@ class BaseModel(nn.Module):
             # Here we just take the current patch defined by its slice
             # in the x and y axes. Then we convert it into a torch
             # tensor for testing.
-            slices = [
+            in_slices = [
                 (
                     slice(xi, xi + patch_size),
                     slice(xj, xj + patch_size),
                     slice(xk, xk + patch_size)
+                )
+                for xi, xj, xk in steps_product[batch:(batch + batch_size)]
+            ]
+            out_slices = [
+                (
+                    slice(xi + self.crop, xi + patch_size - self.crop),
+                    slice(xj + self.crop, xj + patch_size - self.crop),
+                    slice(xk + self.crop, xk + patch_size - self.crop)
                 )
                 for xi, xj, xk in steps_product[batch:(batch + batch_size)]
             ]
@@ -436,10 +445,15 @@ class BaseModel(nn.Module):
                                     xslice, yslice, zslice
                                 ]
                             ).type(torch.float32).to(self.device)
-                            for xslice, yslice, zslice in slices
+                            for xslice, yslice, zslice in in_slices
                         ])
                         for x_i in data
                     )
+                    if directions is not None:
+                        torch_dirs = torch.from_numpy(
+                            directions
+                        ).type(torch.float32)
+                        batch_cuda += (torch_dirs.to(self.device),)
                     seg_out = self(*batch_cuda)
                 else:
                     batch_cuda = torch.stack([
@@ -449,13 +463,19 @@ class BaseModel(nn.Module):
                                 xslice, yslice, zslice
                             ]
                         ).type(torch.float32).to(self.device)
-                        for xslice, yslice, zslice in slices
+                        for xslice, yslice, zslice in in_slices
                     ])
-                    seg_out = self(batch_cuda)
+                    if directions is not None:
+                        torch_dirs = torch.from_numpy(
+                            directions
+                        ).type(torch.float32)
+                        seg_out = self(batch_cuda, torch_dirs.to(self.device))
+                    else:
+                        seg_out = self(batch_cuda)
                 torch.cuda.empty_cache()
 
             # Then we just fill the results image.
-            for si, (xslice, yslice, zslice) in enumerate(slices):
+            for si, (xslice, yslice, zslice) in enumerate(out_slices):
                 counts[slice(None), xslice, yslice, zslice] += 1
                 seg_bi = seg_out[si, :].cpu().numpy()
                 seg[slice(None), xslice, yslice, zslice] += seg_bi
@@ -668,96 +688,44 @@ class SelfAttention(nn.Module):
     """
 
     def __init__(
-            self, in_features, att_features, kernel=1,
-            norm=partial(torch.softmax, dim=1)
-    ):
-        super().__init__()
-        self.features = att_features
-        self.map_key = nn.Conv3d(
-            in_channels=in_features, out_channels=att_features,
-            kernel_size=kernel
-        )
-        self.map_query = nn.Conv3d(
-            in_channels=in_features, out_channels=att_features,
-            kernel_size=kernel
-        )
-        self.map_value = nn.Conv3d(
-            in_channels=in_features, out_channels=in_features,
-            kernel_size=kernel
-        )
-        self.norm = norm
-
-    def forward(self, x):
-        # key = F.layer_norm(self.map_key(x))
-        x_batched = x.flatten(0, 1)
-        key = self.map_key(x_batched)
-        key = key.view(x.shape[:2] + (-1,) + key.shape[2:])
-        key = key.movedim((3, 4, 5), (1, 2, 3))
-        # query = F.layer_norm(self.map_query(x))
-        query = self.map_query(x_batched)
-        query = query.view(x.shape[:2] + (-1,) + query.shape[2:])
-        query = query.movedim((3, 4, 5), (1, 2, 3))
-        # value = F.layer_norm(self.map_value(x))
-        value = self.map_value(x_batched)
-        value = value.view(x.shape[:2] + (-1,) + value.shape[2:])
-        value = value.movedim((3, 4, 5), (1, 2, 3))
-
-        att = torch.matmul(key, query.transpose(-1, -2))
-        att_map = self.norm(att / np.sqrt(self.features))
-        features = torch.matmul(
-            value.transpose(-1, -2), att_map
-        ).transpose(-1, -2)
-
-        return features.movedim((1, 2, 3), (3, 4, 5))
-
-
-class PairedAttention(nn.Module):
-    """
-        Non-local self-attention block based on
-        X. Wang, R. Girshick, A.Gupta, K. He
-        "Non-local Neural Networks"
-        https://arxiv.org/abs/1711.07971
-    """
-
-    def __init__(
             self, key_features, query_features, att_features, kernel=1,
             norm=partial(torch.softmax, dim=1)
     ):
         super().__init__()
-        padding = kernel // 2
         self.features = att_features
         self.map_key = nn.Conv3d(
             in_channels=key_features, out_channels=att_features,
-            kernel_size=kernel, padding=padding
+            kernel_size=kernel
         )
         self.map_query = nn.Conv3d(
             in_channels=query_features, out_channels=att_features,
-            kernel_size=kernel, padding=padding
+            kernel_size=kernel
         )
         self.map_value = nn.Conv3d(
             in_channels=key_features, out_channels=query_features,
-            kernel_size=kernel, padding=padding
+            kernel_size=kernel
         )
         self.norm = norm
 
-    def forward(self, x_key, x_query):
-        # key = F.layer_norm(self.map_key(x))
+    def forward(self, x_key, x_query=None, positional=None):
+        if x_query is None:
+            x_query = x_key
         key_batched = x_key.flatten(0, 1)
         key = self.map_key(key_batched)
         key = key.view(x_key.shape[:2] + (-1,) + key.shape[2:])
         key = key.movedim((3, 4, 5), (1, 2, 3))
-        # query = F.layer_norm(self.map_query(x))
         query_batched = x_query.flatten(0, 1)
         query = self.map_query(query_batched)
         query = query.view(x_query.shape[:2] + (-1,) + query.shape[2:])
         query = query.movedim((3, 4, 5), (1, 2, 3))
-        # value = F.layer_norm(self.map_value(x))
         value = self.map_value(key_batched)
         value = value.view(x_key.shape[:2] + (-1,) + value.shape[2:])
         value = value.movedim((3, 4, 5), (1, 2, 3))
 
         att = torch.matmul(key, query.transpose(-1, -2))
         att_map = self.norm(att / np.sqrt(self.features))
+        if positional is not None:
+            att_map = att_map + positional
         features = torch.matmul(
             value.transpose(-1, -2), att_map
         ).transpose(-1, -2)
@@ -775,74 +743,15 @@ class MultiheadedAttention(nn.Module):
     """
 
     def __init__(
-            self, in_features, att_features, heads=32, kernel=1,
-            norm=partial(torch.softmax, dim=1),
-    ):
-        super().__init__()
-        self.blocks = heads
-        self.init_norm = nn.GroupNorm(1, in_features)
-        # self.init_norm = nn.BatchNorm1d(in_features)
-        self.sa_blocks = nn.ModuleList([
-            nn.Sequential(
-               SelfAttention(
-                   in_features, att_features, kernel, norm
-               ),
-               nn.ReLU()
-            )
-            for _ in range(self.blocks)
-        ])
-        self.final_block = nn.Sequential(
-            nn.InstanceNorm3d(in_features * heads),
-            # nn.GroupNorm(heads, att_features * heads),
-            # nn.BatchNorm1d(in_features * heads),
-            # nn.GroupNorm(1, in_features * heads),
-            nn.Conv3d(in_features * heads, in_features, 1),
-            nn.ReLU(),
-            nn.InstanceNorm3d(in_features),
-            # nn.GroupNorm(heads, att_features * heads),
-            # nn.BatchNorm1d(in_features * heads),
-            # nn.GroupNorm(1, in_features * heads),
-            nn.Conv3d(in_features, in_features, 1)
-        )
-
-    def forward(self, x):
-        x_batched = x.flatten(0, 1)
-        norm_x = self.init_norm(x_batched).view(x.shape)
-        sa = torch.cat(
-            [sa_i(norm_x).flatten(0, 1) for sa_i in self.sa_blocks], dim=1
-        )
-        features = self.final_block(sa)
-        if features.shape != x_batched.shape:
-            crop = tuple(
-                slice((d_x - d_feat) // 2, -(d_x - d_feat) // 2)
-                for d_feat, d_x in zip(
-                    features.size()[2:], x_batched.size()[2:]
-                )
-            )
-            x_batched = x_batched[(slice(None),) * 2 + crop]
-        residual = features + x_batched
-        return residual.view(x.shape[:3] + residual.shape[2:])
-
-
-class MultiheadedPairedAttention(nn.Module):
-    """
-        Mmulti-headed attention based on
-        A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, Ll. Jones, A.N. Gomez,
-        L. Kaiser, I. Polosukhin
-        "Attention Is All You Need"
-        https://arxiv.org/abs/1706.03762
-    """
-
-    def __init__(
-            self, key_features, query_features, att_features, heads=32,
-            kernel=1, norm=partial(torch.softmax, dim=1),
+        self, key_features, query_features, att_features, heads=32, kernel=1,
+        positional_embedding=None, norm=partial(torch.softmax, dim=1),
     ):
         super().__init__()
         self.blocks = heads
         self.key_norm = nn.GroupNorm(1, key_features)
         self.query_norm = nn.GroupNorm(1, query_features)
         self.sa_blocks = nn.ModuleList([
-            PairedAttention(
+            SelfAttention(
                 key_features, query_features, att_features, kernel, norm
             )
             for _ in range(self.blocks)
@@ -862,13 +771,15 @@ class MultiheadedPairedAttention(nn.Module):
             nn.Conv3d(query_features, query_features, 1)
         )
 
-    def forward(self, key, query):
+    def forward(self, key, query=None, positional=None):
+        if query is None:
+            query = key
         key_batched = key.flatten(0, 1)
         norm_key = self.key_norm(key_batched).view(key.shape)
         query_batched = query.flatten(0, 1)
         norm_query = self.query_norm(query_batched).view(query.shape)
         sa = torch.cat([
-            sa_i(norm_key, norm_query).flatten(0, 1)
+            sa_i(norm_key, norm_query, positional).flatten(0, 1)
             for sa_i in self.sa_blocks
         ], dim=1)
         features = self.final_block(sa)

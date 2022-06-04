@@ -10,8 +10,7 @@ import yaml
 import torch
 from torch.utils.data import DataLoader
 from time import strftime
-from datasets import tokenize, DiffusionDataset
-from models import SimpleNet
+from datasets import tokenize
 from utils import find_file, get_mask, get_normalised_image
 from utils import color_codes, time_to_string
 
@@ -47,8 +46,9 @@ def parse_inputs():
 def get_subject(config, p_path):
     roi = get_mask(find_file(config['roi'], p_path))
     image_name = find_file(config['image'], p_path)
+    tensor_name = find_file(config['tensor'], p_path)
+    tensor = nibabel.load(tensor_name).get_fdata()
     raw_image = nibabel.load(image_name).get_fdata()
-    norm_image = get_normalised_image(raw_image, roi)
     bvecs_file = find_file(config['bvecs'], p_path)
     bvals_file = find_file(config['bvals'], p_path)
     with open(bvecs_file) as f:
@@ -59,17 +59,24 @@ def get_subject(config, p_path):
     with open(bvals_file) as f:
         for s_i in f.readlines():
             bvals_array = np.array([int(bval) for bval in s_i.split('  ')])
+    bvals_array = np.expand_dims(bvals_array, axis=(1, 2, 3))
+    invalid_mask = raw_image[1:] <= 0
+    raw_image[raw_image <= 0] = 1e-6
+    norm_image = (np.log(raw_image[:1]) - np.log(raw_image[1:])) / bvals_array
+    norm_image[invalid_mask] = 0
+    norm_image[np.isnan(norm_image)] = 0
+    norm_image[np.isinf(norm_image)] = 0
 
-    return norm_image, roi, bvecs_array, bvals_array
+    return norm_image, tensor, roi, bvecs_array, bvals_array
 
 
 def get_data(config, subjects):
     # Init
     d_path = config['path']
     images = []
+    tensors = []
     rois = []
     direction_list = []
-    bvalue_list = []
     load_start = time.time()
     for pi, p in enumerate(subjects):
         tests = len(subjects) - pi
@@ -83,13 +90,14 @@ def get_data(config, subjects):
             ), end='\r'
         )
         p_path = os.path.join(d_path, p)
-        image, roi, directions, bvalues = get_subject(config, p_path)
-        rois.append(roi)
-        images.append(image)
-        direction_list.append(directions)
-        bvalue_list.append(bvalues)
+        image, tensor, roi, directions, bvalues = get_subject(config, p_path)
 
-    return images, rois, direction_list, bvalue_list
+        images.append(image)
+        tensors.append(tensor)
+        rois.append(roi)
+        direction_list.append(directions)
+
+    return images, tensors, rois, direction_list
 
 
 """
@@ -118,25 +126,26 @@ def train(config, net, training, validation, model_name, verbose=0):
 
         if verbose > 1:
             print('\033[KPreparing the training datasets / dataloaders')
-
+        datasets = importlib.import_module('datasets')
+        dataset_class = getattr(datasets, config['dataset'])
         # Training
         if verbose > 1:
             print('< Training dataset >')
-        itrain, rtrain, dtrain, btrain = get_data(config, training)
+        itrain, ttrain, rtrain, dtrain = get_data(config, training)
         if 'test_patch' in config and 'test_overlap' in config:
-            train_dataset = DiffusionDataset(
-                itrain, rtrain, dtrain, btrain,
+            train_dataset = dataset_class(
+                itrain, ttrain, rtrain, dtrain,
                 patch_size=config['test_patch'],
                 overlap=config['train_overlap']
             )
         elif 'test_patch' in config:
-            train_dataset = DiffusionDataset(
-                itrain, rtrain, dtrain, btrain,
+            train_dataset = dataset_class(
+                itrain, ttrain, rtrain, dtrain,
                 patch_size=config['test_patch']
             )
         else:
-            train_dataset = DiffusionDataset(
-                itrain, rtrain, dtrain, btrain
+            train_dataset = dataset_class(
+                itrain, ttrain, rtrain, dtrain,
             )
 
         if verbose > 1:
@@ -149,23 +158,23 @@ def train(config, net, training, validation, model_name, verbose=0):
         if verbose > 1:
             print('< Validation dataset >')
         if training == validation:
-            ival, rval, dval, bval = itrain, rtrain, dtrain, btrain
+            ival, tval, rval, dval = itrain, ttrain, rtrain, dtrain
         else:
-            ival, rval, dval, bval = get_data(config, validation)
+            ival, tval, rval, dval = get_data(config, validation)
         if 'test_patch' in config and 'test_overlap' in config:
-            val_dataset = DiffusionDataset(
-                ival, rval, dval, bval, shift=False,
+            val_dataset = dataset_class(
+                ival, tval, rval, dval, shift=False,
                 patch_size=config['test_patch'],
                 overlap=config['train_overlap']
             )
         elif 'test_patch' in config:
-            val_dataset = DiffusionDataset(
-                ival, rval, dval, bval, shift=False,
+            val_dataset = dataset_class(
+                ival, tval, rval, dval, shift=False,
                 patch_size=config['test_patch']
             )
         else:
-            val_dataset = DiffusionDataset(
-                ival, rval, dval, bval, shift=False
+            val_dataset = dataset_class(
+                ival, tval, rval, dval, shift=False,
             )
 
         if verbose > 1:
@@ -209,20 +218,23 @@ def test(
 
         p_path = os.path.join(config['path'], subject)
         mask_path = os.path.join(p_path, mask_name)
-        hr_image, _, directions, bvalues = get_subject(config, p_path)
-        lr_image = hr_image[:22, ...]
-        token = tokenize(hr_image, directions, bvalues)
-        key_data = token[:22, ...]
-        query_data = token[22:, :-1, ...]
-        # extra_image = net.patch_inference(
-        #     (key_data, query_data), config['test_patch'], config['test_batch'],
-        #     sub_i, len(testing_subjects), test_start
-        # )
-        extra_image = net.patch_inference(
-            (key_data, query_data), config['test_patch'],
-            config['test_patch'] - 1, sub_i, len(testing_subjects),
-            test_start
-        )
+        hr_image, tensor, _, directions, bvalues = get_subject(config, p_path)
+        lr_image = hr_image[:21, ...]
+        if config['tokenize']:
+            token = tokenize(hr_image, directions)
+            input_data = (token[:21, ...], token[21:, :-1, ...])
+            extra_image = net.patch_inference(
+                input_data, config['test_patch'], config['test_patch'] - 1,
+                None, sub_i, len(testing_subjects),
+                test_start
+            )
+        else:
+            extra_image = net.patch_inference(
+                lr_image, config['test_patch'], config['test_patch'] - 1,
+                directions, sub_i, len(testing_subjects),
+                test_start
+            )
+
         hr_prediction = np.concatenate([lr_image, extra_image])
         image_nii = nibabel.load(find_file(config['image'], p_path))
         prediction_nii = nibabel.Nifti1Image(

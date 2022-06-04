@@ -7,17 +7,12 @@ from torch.utils.data.dataset import Dataset
 ''' Utility function for patch creation '''
 
 
-def tokenize(dmri, directions, bvalues):
+def tokenize(dmri, directions):
     hr_dmri = np.expand_dims(dmri, axis=1)
     hr_dir = np.broadcast_to(
         np.expand_dims(directions, axis=(2, 3, 4)),
         directions.shape + hr_dmri.shape[2:]
     )
-    hr_bvalues = np.broadcast_to(
-        np.expand_dims(bvalues, axis=(1, 2, 3, 4)),
-        bvalues.shape + hr_dmri.shape[1:]
-    )
-    # hr_data = np.concatenate([hr_bvalues, hr_dir, hr_dmri], axis=1)
     hr_data = np.concatenate([hr_dir, hr_dmri], axis=1)
 
     return hr_data
@@ -149,8 +144,8 @@ def randomized_shift(center, size, patch_size, max_shift):
 
 class DiffusionDataset(Dataset):
     def __init__(
-        self, dmri, rois, directions, bvalues, patch_size=32,
-        overlap=0, min_lr=22, max_lr=22, shift=True
+        self, dmri,tensors, rois, directions, patch_size=32,
+        overlap=0, min_lr=21, max_lr=21, shift=True
     ):
         # Init
         if type(patch_size) is not tuple:
@@ -165,9 +160,9 @@ class DiffusionDataset(Dataset):
         self.shift = shift
 
         self.images = dmri
+        self.tensors = tensors
         self.rois = rois
         self.directions = directions
-        self.bvalues = bvalues
         n_directions = [len(bvalue) > 7 for bvalue in self.bvalues]
         assert np.all(n_directions), 'The inputs are already low resolution'
         if min_lr < 7:
@@ -206,17 +201,57 @@ class DiffusionDataset(Dataset):
 
         patch = dmri[none_slice + slice_i].astype(np.float32)
         dirs = self.directions[case_idx].astype(np.float32)
-        bvalues = self.bvalues[case_idx].astype(np.float32)
         if self.min_lr == self.max_lr:
             lr_end = self.min_lr
         else:
             lr_end = np.random.randint(self.min_lr, self.max_lr, 1)
-        hr_data = tokenize(patch, dirs, bvalues)
+        hr_data = tokenize(patch, dirs)
         key_data = deepcopy(hr_data[:lr_end, ...])
         query_data = deepcopy(hr_data[lr_end:, :-1, ...])
         target_data = hr_data[lr_end:, -1, ...]
 
         return (key_data, query_data), target_data
+
+    def __len__(self):
+        return len(self.patch_centers)
+
+
+class PositionalDiffusionDataset(DiffusionDataset):
+    def __init__(
+        self, dmri, tensors, rois, directions, patch_size=32,
+        overlap=0, min_lr=21, max_lr=21, shift=True
+    ):
+        # Init
+        super().__init__(
+            dmri, tensors, rois, directions, patch_size, overlap,
+            min_lr, max_lr, shift
+        )
+
+    def __getitem__(self, index):
+        center_i, case_idx = self.patch_centers[index]
+        dmri = self.images[case_idx]
+        dti = self.tensors[case_idx]
+
+        none_slice = (slice(None),)
+        if self.shift:
+            shifted_center_i = randomized_shift(
+                center_i, dmri.shape[1:], self.patch_size, self.patch_half
+            )
+            slice_i = center_to_slice(shifted_center_i, self.patch_half)
+        else:
+            slice_i = center_to_slice(center_i, self.patch_half)
+
+        patch = np.expand_dims(dmri[none_slice + slice_i].astype(np.float32), 1)
+        target_data = dti[none_slice + slice_i].astype(np.float32)
+        dirs = self.directions[case_idx].astype(np.float32)
+        if self.min_lr == self.max_lr:
+            lr_end = self.min_lr
+        else:
+            lr_end = np.random.randint(self.min_lr, self.max_lr, 1)
+
+        data = deepcopy(patch[:lr_end, ...])
+
+        return (data, dirs), target_data
 
     def __len__(self):
         return len(self.patch_centers)
