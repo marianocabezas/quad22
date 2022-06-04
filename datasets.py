@@ -250,7 +250,6 @@ class PositionalDiffusionDataset(DiffusionDataset):
         )
         target_data = dti[none_slice + slice_i].astype(np.float32)
         dirs = self.directions[case_idx].astype(np.float32)[:lr_end, ...]
-        print(dirs.shape)
 
         data = deepcopy(patch[:lr_end, ...])
 
