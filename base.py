@@ -451,7 +451,7 @@ class BaseModel(nn.Module):
                     )
                     if directions is not None:
                         torch_dirs = torch.from_numpy(
-                            directions
+                            np.expand_dims(directions, axis=0)
                         ).type(torch.float32)
                         batch_cuda += (torch_dirs.to(self.device),)
                     seg_out = self(*batch_cuda)
@@ -467,7 +467,7 @@ class BaseModel(nn.Module):
                     ])
                     if directions is not None:
                         torch_dirs = torch.from_numpy(
-                            directions
+                            np.expand_dims(directions, axis=0)
                         ).type(torch.float32)
                         seg_out = self(batch_cuda, torch_dirs.to(self.device))
                     else:
