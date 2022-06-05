@@ -363,7 +363,7 @@ def main():
 
             fold_name = os.path.join(
                 model_path,
-                '{:}.n{:05d}.s{:05d}.pt'.format(model_base, i, seed)
+                '{:}.n{:02d}.s{:05d}.pt'.format(model_base, i, seed)
             )
             train(config, net, training, validation, fold_name, 2)
             test(config, seed, net, model_base, testing, 2)
