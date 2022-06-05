@@ -326,7 +326,7 @@ def main():
             heads=heads
         )
         starting_model = os.path.join(
-            model_path, '{:}-start.s{:05d}.pt'.format(basename, seed),
+            model_path, '{:}-start.s{:05d}.pt'.format(model_base, seed),
         )
         net.save_model(starting_model)
         n_param = sum(
