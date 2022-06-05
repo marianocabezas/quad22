@@ -168,6 +168,7 @@ class PositionalNet(BaseModel):
         self.epoch = 0
         self.t_train = 0
         self.t_val = 0
+        self.crop = 0
         self.device = device
 
         # <Parameter setup>
