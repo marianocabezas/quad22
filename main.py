@@ -233,7 +233,7 @@ def test(
             token = tokenize(hr_image, directions)
             input_data = (token[:21, ...], token[21:, :-1, ...])
             extra_image = net.patch_inference(
-                input_data, config['test_patch'], config['test_patch'] - 1,
+                input_data, config['test_patch'], config['test_batch'],
                 None, sub_i, len(testing_subjects),
                 test_start
             )
@@ -253,7 +253,7 @@ def test(
         else:
             lr_image = np.expand_dims(lr_image, axis=1)
             prediction = net.patch_inference(
-                lr_image, config['test_patch'], config['test_patch'] - 1,
+                lr_image, config['test_patch'], config['test_batch'],
                 directions[:21, ...], sub_i, len(testing_subjects),
                 test_start
             )
