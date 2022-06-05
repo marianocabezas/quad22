@@ -229,7 +229,7 @@ def test(
             config, p_path
         )
         lr_image = hr_image[:21, ...]
-        roi =  np.expand_dims(roi, 0).astype(np.float32)
+        roi = np.expand_dims(roi, 0).astype(np.float32)
         if config['tokenize']:
             token = tokenize(hr_image, directions)
             input_data = (token[:21, ...], token[21:, :-1, ...])
