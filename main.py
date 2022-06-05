@@ -312,7 +312,7 @@ def main():
             '{:}[{:}] {:}Starting cross-validation (model: {:}}){:}'
             ' (seed {:d}){:}'.format(
                 c['clr'] + c['c'], strftime("%H:%M:%S"), c['g'],
-                c['b'] + model_base + c['nc'] + c['g'],
+                c['b'] + model_base + c['g'],
                 c['nc'] + c['y'], seed, c['nc']
             )
         )
