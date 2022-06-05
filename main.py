@@ -239,6 +239,13 @@ def test(
             )
             image = np.concatenate([lr_image, extra_image])
             prediction = np.exp(bvalues * image + log_b0)
+            image_nii = nibabel.load(find_file(config['image'], p_path))
+            image_path = os.path.join(p_path, 'out-' + mask_name)
+            prediction_nii = nibabel.Nifti1Image(
+                np.moveaxis(image, 0, -1),
+                image_nii.get_qform(), image_nii.header
+            )
+            prediction_nii.to_filename(image_path)
         else:
             lr_image = np.expand_dims(lr_image, axis=1)
             prediction = net.patch_inference(
