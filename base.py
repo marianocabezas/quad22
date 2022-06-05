@@ -483,6 +483,7 @@ class BaseModel(nn.Module):
             # Printing
             self.print_batch(bi, n_batches, case, n_cases, t_start, t_in)
 
+        counts[counts == 0] = 1
         seg /= counts
 
         return seg
