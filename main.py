@@ -254,7 +254,7 @@ def test(
             lr_image = np.expand_dims(lr_image, axis=1)
             prediction = net.patch_inference(
                 lr_image, config['test_patch'], config['test_patch'] - 1,
-                directions, sub_i, len(testing_subjects),
+                directions[:21, ...], sub_i, len(testing_subjects),
                 test_start
             )
             print(prediction.shape)
