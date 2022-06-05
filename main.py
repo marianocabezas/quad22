@@ -240,7 +240,7 @@ def test(
             image = np.concatenate([lr_image, extra_image])
             image = image * np.expand_dims(roi, 0).astype(np.float32)
             log_prediction = np.concatenate([
-                log_b0, bvalues * image + log_b0
+                log_b0, log_b0 - bvalues * image
             ])
             prediction = np.exp(log_prediction)
             image_nii = nibabel.load(find_file(config['image'], p_path))
