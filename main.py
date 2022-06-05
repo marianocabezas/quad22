@@ -230,18 +230,18 @@ def test(
         )
         lr_image = hr_image[:21, ...]
         if config['tokenize']:
-            print(lr_image.shape, hr_image.shape, token.shape)
             token = tokenize(hr_image, directions)
+            print(lr_image.shape, hr_image.shape, token.shape)
             input_data = (token[:21, ...], token[21:, :-1, ...])
             extra_image = net.patch_inference(
                 input_data, config['test_patch'], config['test_patch'] - 1,
                 None, sub_i, len(testing_subjects),
                 test_start
             )
-            print(extra_image.shape)
-            extra_bvalues = np.expand_dims(bvalues[21:], axis=(1, 2, 3))
-            extra_image = np.exp(extra_bvalues * extra_image + log_b0)
-            prediction = np.concatenate([lr_image, extra_image])
+            print(lr_image.shape, extra_image.shape)
+            bvalues = np.expand_dims(bvalues, axis=(1, 2, 3))
+            image = np.concatenate([lr_image, extra_image])
+            prediction = np.exp(bvalues * image + log_b0)
         else:
             lr_image = np.expand_dims(lr_image, axis=1)
             prediction = net.patch_inference(
