@@ -239,7 +239,10 @@ def test(
             )
             image = np.concatenate([lr_image, extra_image])
             image = image * np.expand_dims(roi, 0).astype(np.float32)
-            prediction = np.exp(bvalues * image + log_b0)
+            log_prediction = np.concatenate([
+                log_b0, bvalues * image + log_b0
+            ])
+            prediction = np.exp(log_prediction)
             image_nii = nibabel.load(find_file(config['image'], p_path))
             image_path = os.path.join(p_path, 'out-' + mask_name)
             prediction_nii = nibabel.Nifti1Image(
