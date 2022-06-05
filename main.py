@@ -225,7 +225,7 @@ def test(
 
         p_path = os.path.join(config['path'], subject)
         mask_path = os.path.join(p_path, mask_name)
-        hr_image, log_b0, tensor, _, directions, bvalues = get_subject(
+        hr_image, log_b0, tensor, roi, directions, bvalues = get_subject(
             config, p_path
         )
         lr_image = hr_image[:21, ...]
@@ -238,6 +238,7 @@ def test(
                 test_start
             )
             image = np.concatenate([lr_image, extra_image])
+            image = image * np.expand_dims(roi, 0).astype(np.float32)
             prediction = np.exp(bvalues * image + log_b0)
             image_nii = nibabel.load(find_file(config['image'], p_path))
             image_path = os.path.join(p_path, 'out-' + mask_name)
