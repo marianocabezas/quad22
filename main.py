@@ -293,6 +293,7 @@ def main():
         heads = config['heads']
     except KeyError:
         heads = 32
+    model_base = os.path.splitext(os.path.basename(options['config']))[0]
     print(
         '{:}[{:}] {:}<Diffusion super-resolution framework>{:}'.format(
             c['c'], strftime("%H:%M:%S"), c['y'], c['nc']
@@ -308,9 +309,10 @@ def main():
     # Main loop with all the seeds
     for test_n, seed in enumerate(seeds):
         print(
-            '{:}[{:}] {:}Starting cross-validation (model: simple){:}'
+            '{:}[{:}] {:}Starting cross-validation (model: {:}}){:}'
             ' (seed {:d}){:}'.format(
                 c['clr'] + c['c'], strftime("%H:%M:%S"), c['g'],
+                c['b'] + model_base + c['nc'] + c['g'],
                 c['nc'] + c['y'], seed, c['nc']
             )
         )
@@ -324,7 +326,7 @@ def main():
             heads=heads
         )
         starting_model = os.path.join(
-            model_path, 'simple-quad22-start.s{:05d}.pt'.format(seed),
+            model_path, '{:}-start.s{:05d}.pt'.format(basename, seed),
         )
         net.save_model(starting_model)
         n_param = sum(
