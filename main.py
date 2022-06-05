@@ -230,6 +230,7 @@ def test(
         )
         lr_image = hr_image[:21, ...]
         if config['tokenize']:
+            print(lr_image.shape, hr_image.shape, token.shape)
             token = tokenize(hr_image, directions)
             input_data = (token[:21, ...], token[21:, :-1, ...])
             extra_image = net.patch_inference(
