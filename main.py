@@ -246,7 +246,7 @@ def test(
             image_nii = nibabel.load(find_file(config['image'], p_path))
             image_path = os.path.join(p_path, 'out-' + mask_name)
             prediction_nii = nibabel.Nifti1Image(
-                np.moveaxis(image, 0, -1),
+                np.moveaxis(log_prediction, 0, -1),
                 image_nii.get_qform(), image_nii.header
             )
             prediction_nii.to_filename(image_path)
