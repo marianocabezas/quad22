@@ -172,7 +172,7 @@ class PositionalNet(BaseModel):
 
         # <Parameter setup>
         self.encoder = nn.ModuleList([
-            MultiheadedAttention(features, features, f_att, heads, 3)
+            MultiheadedAttention(features, features, f_att, heads, 1)
             for f_att in self.encoder_filters
         ])
         self.encoder.to(self.device)
