@@ -229,6 +229,7 @@ def test(
             config, p_path
         )
         lr_image = hr_image[:21, ...]
+        roi =  np.expand_dims(roi, 0).astype(np.float32)
         if config['tokenize']:
             token = tokenize(hr_image, directions)
             input_data = (token[:21, ...], token[21:, :-1, ...])
@@ -238,11 +239,10 @@ def test(
                 test_start
             )
             image = np.concatenate([lr_image, extra_image])
-            image = image * np.expand_dims(roi, 0).astype(np.float32)
             log_prediction = np.concatenate([
                 log_b0, log_b0 - bvalues * image
-            ])
-            prediction = np.exp(log_prediction)
+            ]) * roi
+            prediction = np.exp(log_prediction) * roi
             image_nii = nibabel.load(find_file(config['image'], p_path))
             image_path = os.path.join(p_path, 'out-' + mask_name)
             prediction_nii = nibabel.Nifti1Image(
@@ -256,8 +256,7 @@ def test(
                 lr_image, config['test_patch'], config['test_batch'],
                 directions[:21, ...], sub_i, len(testing_subjects),
                 test_start
-            )
-            print(prediction.shape)
+            ) * roi
 
         image_nii = nibabel.load(find_file(config['image'], p_path))
         prediction_nii = nibabel.Nifti1Image(
