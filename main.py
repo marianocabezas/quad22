@@ -237,14 +237,17 @@ def test(
                 None, sub_i, len(testing_subjects),
                 test_start
             )
+            print(extra_image.shape)
             extra_bvalues = np.expand_dims(bvalues[21:], axis=(1, 2, 3))
             extra_image = np.exp(extra_bvalues * extra_image + log_b0)
         else:
+            lr_image = np.expand_dims(lr_image, axis=1)
             extra_image = net.patch_inference(
                 lr_image, config['test_patch'], config['test_patch'] - 1,
                 directions, sub_i, len(testing_subjects),
                 test_start
             )
+            print(extra_image.shape)
 
         hr_prediction = np.concatenate([lr_image, extra_image])
         image_nii = nibabel.load(find_file(config['image'], p_path))
