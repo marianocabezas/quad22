@@ -335,9 +335,10 @@ def main():
         )
 
         print(
-            '{:}Testing initial weights{:} - {:02d}/{:02d} '
+            '{:}Training with seed {:} - {:02d}/{:02d} '
             '({:} parameters)'.format(
-                c['clr'] + c['c'], c['nc'], test_n + 1, len(config['seeds']),
+                c['clr'] + c['c'], c['b'] + str(seed) + c['nc'],
+                test_n + 1, len(config['seeds']),
                 c['b'] + str(n_param) + c['nc']
             )
         )
