@@ -408,7 +408,7 @@ class BaseModel(nn.Module):
         # the possible combinations of patch indices.
         steps = [
             list(
-                range(0, lim - patch_size, 1)
+                range(0, lim - patch_size, 2)
             ) + [lim - patch_size]
             for lim in data_shape[1:]
         ]
