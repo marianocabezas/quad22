@@ -72,8 +72,6 @@ def get_subject(config, p_path):
     log_dmri[invalid_dmri] = 0
     norm_image = (log_b0 - log_dmri) / bvals_array
 
-    print(norm_image.shape, b0.shape)
-
     return norm_image, log_b0, tensor, roi, bvecs_array, bvals_array
 
 
