@@ -240,19 +240,19 @@ def test(
             print(extra_image.shape)
             extra_bvalues = np.expand_dims(bvalues[21:], axis=(1, 2, 3))
             extra_image = np.exp(extra_bvalues * extra_image + log_b0)
+            prediction = np.concatenate([lr_image, extra_image])
         else:
             lr_image = np.expand_dims(lr_image, axis=1)
-            extra_image = net.patch_inference(
+            prediction = net.patch_inference(
                 lr_image, config['test_patch'], config['test_patch'] - 1,
                 directions, sub_i, len(testing_subjects),
                 test_start
             )
-            print(extra_image.shape)
+            print(prediction.shape)
 
-        hr_prediction = np.concatenate([lr_image, extra_image])
         image_nii = nibabel.load(find_file(config['image'], p_path))
         prediction_nii = nibabel.Nifti1Image(
-            np.moveaxis(hr_prediction, 0, -1),
+            np.moveaxis(prediction, 0, -1),
             image_nii.get_qform(), image_nii.header
         )
         prediction_nii.to_filename(mask_path)
