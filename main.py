@@ -237,20 +237,8 @@ def test(
                 None, sub_i, len(testing_subjects),
                 test_start
             )
-            bvalues = np.expand_dims(bvalues, axis=(1, 2, 3))
-            print(
-                lr_image.shape, extra_image.shape, log_b0.shape, bvalues.shape
-            )
             image = np.concatenate([lr_image, extra_image])
-            print(
-                image.shape
-            )
             prediction = np.exp(bvalues * image + log_b0)
-            print(
-                prediction.shape,
-                prediction.min(axis=(1, 2, 3)),
-                prediction.max(axis=(1, 2, 3))
-            )
         else:
             lr_image = np.expand_dims(lr_image, axis=1)
             prediction = net.patch_inference(
