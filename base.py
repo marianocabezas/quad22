@@ -391,10 +391,16 @@ class BaseModel(nn.Module):
         # test them, and average the results. I know both approaches
         # produce unwanted artifacts, so I don't know.
         # Initial results. Filled to 0.
-        if isinstance(data, tuple):
-            data_shape = data[1].shape[:1] + data[1].shape[-3:]
+        if directions is None:
+            if isinstance(data, tuple):
+                data_shape = data[1].shape[:1] + data[1].shape[-3:]
+            else:
+                data_shape = data.shape[:1] + data.shape[-3:]
         else:
-            data_shape = data.shape[:1] + data.shape[-3:]
+            if isinstance(data, tuple):
+                data_shape = (6,) + data[1].shape[-3:]
+            else:
+                data_shape = (6,) + data.shape[-3:]
         seg = np.zeros(data_shape)
         counts = np.zeros(data_shape)
 
