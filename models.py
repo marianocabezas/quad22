@@ -324,7 +324,7 @@ class TensorUnet(BaseModel):
             {
                 'name': 'mse',
                 'weight': 1e3,
-                'f': F.mse_loss
+                'f': self.mse_loss
             }
         ]
 
@@ -332,7 +332,7 @@ class TensorUnet(BaseModel):
             {
                 'name': 'mse',
                 'weight': 1e3,
-                'f': F.mse_loss
+                'f': self.mse_loss
             }
         ]
 
@@ -354,6 +354,15 @@ class TensorUnet(BaseModel):
         super().reset_optimiser()
         model_params = filter(lambda p: p.requires_grad, self.parameters())
         self.optimizer_alg = torch.optim.Adam(model_params)
+
+    def mse_loss(self, prediction, target_tensors):
+        roi, target = target_tensors
+        crop_slice = slice(self.crop, -self.crop)
+        loss = F.mse_loss(
+            prediction * roi,
+            target[..., crop_slice, crop_slice, crop_slice] * roi
+        )
+        return loss
 
     def forward(self, data, bvecs):
         # This is a dirty hack to reuse the same dataset we used for
