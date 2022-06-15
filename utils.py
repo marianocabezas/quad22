@@ -356,7 +356,7 @@ def get_dti_metrics(tensor):
     # as possible to the FSL image. The small cascaded errors seem to lead to
     # a large MSE difference.
     dti_matrix = unique_to_matrix(tensor.astype(np.float16))
-    v = np.linalg.eigvals(dti_matrix)
+    v = np.real(np.linalg.eigvals(dti_matrix))
 
     num_sq12 = (v[..., 0] - v[..., 1]) ** 2
     num_sq13 = (v[..., 0] - v[..., 2]) ** 2

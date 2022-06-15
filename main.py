@@ -281,7 +281,7 @@ def test(
                 prediction = net.inference((
                     lr_image.astype(np.float32),
                     directions[:21, ...].astype(np.float32)
-                ))
+                )) * roi
 
         image_nii = nibabel.load(find_file(config['image'], p_path))
         prediction_nii = nibabel.Nifti1Image(
