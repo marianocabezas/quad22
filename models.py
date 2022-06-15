@@ -184,8 +184,7 @@ class PositionalNet(BaseModel):
         self.final = nn.Conv3d(features, 6, 1)
         self.final.to(self.device)
 
-        # self.crop = len(self.encoder_filters)
-        self.crop = 0
+        self.crop = len(self.encoder_filters)
         # <Loss function setup>
         self.train_functions = [
             {
@@ -218,11 +217,11 @@ class PositionalNet(BaseModel):
             )
 
     def mse_loss(self, prediction, target):
-        crop_slice = slice(self.crop, -self.crop)
-        loss = F.mse_loss(
-            prediction, target[..., crop_slice, crop_slice, crop_slice]
-        )
-        return loss
+        # crop_slice = slice(self.crop, -self.crop)
+        # loss = F.mse_loss(
+        #     prediction, target[..., crop_slice, crop_slice, crop_slice]
+        # )
+        return F.mse_loss(prediction, target)
 
     def reset_optimiser(self):
         super().reset_optimiser()
