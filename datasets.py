@@ -144,7 +144,7 @@ def randomized_shift(center, size, patch_size, max_shift):
 
 class DiffusionDataset(Dataset):
     def __init__(
-        self, dmri,tensors, rois, directions, patch_size=32,
+        self, dmri, tensors, rois, directions, patch_size=32,
         overlap=0, min_lr=21, max_lr=21, shift=True
     ):
         # Init
@@ -257,3 +257,40 @@ class PositionalDiffusionDataset(DiffusionDataset):
 
     def __len__(self):
         return len(self.patch_centers)
+
+
+class DiffusionImageDataset(Dataset):
+    def __init__(
+        self, dmri, tensors, rois, directions, min_lr=21, max_lr=21
+    ):
+        # Init
+        self.images = dmri
+        self.tensors = tensors
+        self.rois = rois
+        self.directions = directions
+        n_directions = [len(bvec) > 7 for bvec in self.directions]
+        assert np.all(n_directions), 'The inputs are already low resolution'
+        if min_lr < 7:
+            self.min_lr = 7
+        else:
+            self.min_lr = min_lr
+        if max_lr < self.min_lr:
+            self.max_lr = self.min_lr
+        else:
+            self.max_lr = max_lr
+
+    def __getitem__(self, index):
+        center_i, case_idx = self.patch_centers[index]
+        dmri = np.expand_dims(self.images[case_idx], 1).astype(np.float32)
+        dti = self.tensors[case_idx]
+        if self.min_lr == self.max_lr:
+            lr_end = self.min_lr
+        else:
+            lr_end = np.random.randint(self.min_lr, self.max_lr, 1)
+        dirs = self.directions[case_idx].astype(np.float32)[:lr_end, ...]
+        data = dmri[:lr_end, ...]
+
+        return (data, dirs), dti
+
+    def __len__(self):
+        return len(self.dmri)

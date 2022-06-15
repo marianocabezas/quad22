@@ -10,9 +10,9 @@ dti_metrics: True
 
 # Training data information
 network: TensorUnet
-dataset: PositionalDiffusionDataset
-train_batch: 4
-test_batch: 32
+dataset: DiffusionImageDataset
+train_batch: 1
+test_batch: 8
 
 # Network hyperparameters and configuration
 heads: 64
