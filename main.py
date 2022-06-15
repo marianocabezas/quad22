@@ -11,7 +11,7 @@ import torch
 from torch.utils.data import DataLoader
 from time import strftime
 from datasets import tokenize
-from utils import find_file, get_mask, get_normalised_image
+from utils import find_file, get_mask, get_normalised_image, get_dti_metrics
 from utils import color_codes, time_to_string
 
 
@@ -208,6 +208,14 @@ def test(
     config, seed, net, base_name, testing_subjects, verbose=0
 ):
     # Init
+    try:
+        tokenize_flag = config['tokenize']
+    except KeyError:
+        tokenize_flag = True
+    try:
+        tensor_flag = config['dti_metrics']
+    except KeyError:
+        tensor_flag = False
     mask_name = '{:}.s{:05d}.nii.gz'.format(base_name, seed)
     test_start = time.time()
     for sub_i, subject in enumerate(testing_subjects):
@@ -230,7 +238,7 @@ def test(
         )
         lr_image = hr_image[:21, ...]
         roi = np.expand_dims(roi, 0).astype(np.float32)
-        if config['tokenize']:
+        if tokenize_flag:
             token = tokenize(hr_image, directions)
             input_data = (token[:21, ...], token[21:, :-1, ...])
             extra_image = net.patch_inference(
@@ -264,6 +272,31 @@ def test(
             image_nii.get_qform(), image_nii.header
         )
         prediction_nii.to_filename(mask_path)
+
+        if tensor_flag:
+            fa, md, ad = get_dti_metrics(np.moveaxis(prediction, 0, -1))
+
+            fa_name = '{:}.s{:05d}_FA.nii.gz'.format(base_name, seed)
+            fa_path = os.path.join(p_path, fa_name)
+            prediction_nii = nibabel.Nifti1Image(
+                fa, image_nii.get_qform(), image_nii.header
+            )
+            prediction_nii.to_filename(fa_path)
+
+            fa_name = '{:}.s{:05d}_MD.nii.gz'.format(base_name, seed)
+            fa_path = os.path.join(p_path, fa_name)
+            prediction_nii = nibabel.Nifti1Image(
+                md, image_nii.get_qform(), image_nii.header
+            )
+            prediction_nii.to_filename(md_path)
+
+            fa_name = '{:}.s{:05d}_AD.nii.gz'.format(base_name, seed)
+            fa_path = os.path.join(p_path, fa_name)
+            prediction_nii = nibabel.Nifti1Image(
+                ad, image_nii.get_qform(), image_nii.header
+            )
+            prediction_nii.to_filename(ad_path)
+
 
 
 """
@@ -328,11 +361,18 @@ def main():
         random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
-        net = network_class(
-            encoder_filters=encoder_filters,
-            decoder_filters=decoder_filters,
-            heads=heads
-        )
+        try:
+            net = network_class(
+                encoder_filters=encoder_filters,
+                decoder_filters=decoder_filters,
+                heads=heads
+            )
+        except TypeError:
+            # heads is most likely the issue
+            net = network_class(
+                encoder_filters=encoder_filters,
+                decoder_filters=decoder_filters,
+            )
         starting_model = os.path.join(
             model_path, '{:}-start.s{:05d}.pt'.format(model_base, seed),
         )

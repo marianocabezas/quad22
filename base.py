@@ -366,7 +366,7 @@ class BaseModel(nn.Module):
             if len(output) > 0:
                 np_output = output.cpu().numpy()
             else:
-                np_output = output[0, 0].cpu().numpy()
+                np_output = output[0].cpu().numpy()
         if temp_task is not None and hasattr(self, 'current_task'):
             self.current_task = temp_task
 

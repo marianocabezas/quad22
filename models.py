@@ -1,9 +1,10 @@
 import time
+from functools import partial
 import torch
 from torch import nn
 import torch.nn.functional as F
 from base import BaseModel
-from base import MultiheadedAttention
+from base import MultiheadedAttention, ResConv3dBlock
 from utils import time_to_string
 
 
@@ -245,3 +246,140 @@ class PositionalNet(BaseModel):
         dti_shape = data.shape[:2] + (-1,) + data.shape[3:]
 
         return torch.sum(dti_flat.view(dti_shape), dim=1)
+
+
+class TensorUnet(BaseModel):
+    def __init__(
+            self,
+            encoder_filters=None, decoder_filters=None,
+            device=torch.device(
+                "cuda:0" if torch.cuda.is_available() else "cpu"
+            ),
+            features=1,
+            verbose=0,
+    ):
+        super().__init__()
+        self.init = False
+        # Init values
+        if encoder_filters is None:
+            encoder_filters = [4, 8, 16, 32, 64, 128]
+        if decoder_filters is None:
+            decoder_filters = self.encoder_filters[:0:-1]
+        if decoder_filters >= encoder_filters:
+            shift = len(decoder_filters) - len(encoder_filters) + 1
+            extra_filters = decoder_filters[:shift]
+            encoder_filters += extra_filters[::-1]
+        if len(decoder_filters) < (len(encoder_filters) - 1):
+            shift = len(encoder_filters) - len(decoder_filters)
+            extra_filters = encoder_filters[:shift:-1]
+            decoder_filters = extra_filters + decoder_filters
+        self.epoch = 0
+        self.t_train = 0
+        self.t_val = 0
+        self.device = device
+
+        # <Parameter setup>
+        # Init
+        block_partial = partial(
+            ResConv3dBlock, kernel=3, norm=norm_f, activation=nn.ReLU
+        )
+
+        # Down path
+        # We'll use the partial and fill it with the channels for input and
+        # output for each level.
+        self.encoder = nn.ModuleList([
+            block_partial(f_in, f_out) for f_in, f_out in zip(
+                [features] + encoder_filters[:-2], encoder_filters[:-1]
+            )
+        ])
+        self.encoder.to(self.device)
+
+        # Bottleneck
+        self.bottleneck = block_partial(
+            encoder_filters[-2], encoder_filters[-1]
+        )
+
+        # Up path
+        # Now we'll do the same we did on the down path, but mirrored. We also
+        # need to account for the skip connections, that's why we sum the
+        # channels for both outputs. That basically means that we are
+        # concatenating with the skip connection, and not adding to it.
+        skip_filters = encoder_filters[-2::-1]
+        up_filters = [encoder_filters[-1]] + decoder_filters[:-1]
+        deconv_in = [
+            skip_i + up_i for skip_i, up_i in zip(skip_filters, up_filters)
+        ]
+        self.decoder = nn.ModuleList([
+            block_partial(f_in, f_out) for f_in, f_out in zip(
+                deconv_in, decoder_filters
+            )
+        ])
+        self.decoder.to(self.device)
+        self.final = nn.Conv3d(decoder_filters[-1], 6, 1)
+        self.final.to(self.device)
+
+        # <Loss function setup>
+        self.train_functions = [
+            {
+                'name': 'mse',
+                'weight': 1,
+                'f': F.mse_loss
+            }
+        ]
+
+        self.val_functions = [
+            {
+                'name': 'mse',
+                'weight': 1,
+                'f': F.mse_loss
+            }
+        ]
+
+        # <Optimizer setup>
+        # We do this last step after all parameters are defined
+        model_params = filter(lambda p: p.requires_grad, self.parameters())
+        self.optimizer_alg = torch.optim.Adam(model_params)
+        if verbose > 1:
+            print(
+                'Network created on device {:} with training losses '
+                '[{:}] and validation losses [{:}]'.format(
+                    self.device,
+                    ', '.join([tf['name'] for tf in self.train_functions]),
+                    ', '.join([vf['name'] for vf in self.val_functions])
+                )
+            )
+
+    def reset_optimiser(self):
+        super().reset_optimiser()
+        model_params = filter(lambda p: p.requires_grad, self.parameters())
+        self.optimizer_alg = torch.optim.Adam(model_params)
+
+    def forward(self, data, bvecs):
+        # positional = torch.matmul(bvecs, bvecs.transpose(1, 2))
+        # new_shape = positional.shape[:1] + (1,) * 3 + positional.shape[-2:]
+        # positional = positional.view(new_shape)
+        # We need to keep track of the convolutional outputs, for the skip
+        # connections.
+        down_inputs = []
+        for c in self.encoder:
+            c.to(self.device)
+            data = c(data)
+            down_inputs.append(data)
+            # Remember that pooling is optional
+            data = F.max_pool3d(data, 2)
+
+        self.u.to(self.device)
+        data = self.u(data)
+
+        for d, i in zip(self.decoder, down_inputs[::-1]):
+            d.to(self.device)
+            # Remember that pooling is optional
+            data = d(
+                torch.cat(
+                    (F.interpolate(data, size=i.size()[2:]), i),
+                    dim=1
+                )
+            )
+
+        self.final.to(self.device)
+        return self.final(data)
