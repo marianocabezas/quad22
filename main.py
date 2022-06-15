@@ -253,9 +253,10 @@ def test(
                     test_start
                 )
             else:
-                extra_image = net.inference(
-                    (input_data, directions[:21, ...].astype(np.float32))
-                )
+                extra_image = net.inference((
+                    lr_image.astype(np.float32),
+                    directions[:21, ...].astype(np.float32)
+                ))
             image = np.concatenate([lr_image, extra_image])
             log_prediction = np.concatenate([
                 log_b0, log_b0 - bvalues * image
@@ -277,9 +278,10 @@ def test(
                     test_start
                 ) * roi
             else:
-                prediction = net.inference(
-                    (lr_image, directions[:21, ...].astype(np.float32))
-                )
+                prediction = net.inference((
+                    lr_image.astype(np.float32),
+                    directions[:21, ...].astype(np.float32)
+                ))
 
         image_nii = nibabel.load(find_file(config['image'], p_path))
         prediction_nii = nibabel.Nifti1Image(
