@@ -139,16 +139,16 @@ def train(config, net, training, validation, model_name, verbose=0):
         if verbose > 1:
             print('< Training dataset >')
         itrain, ttrain, rtrain, dtrain = get_data(config, training)
-        if 'test_patch' in config and 'test_overlap' in config:
+        if 'train_patch' in config and 'train_overlap' in config:
             train_dataset = dataset_class(
                 itrain, ttrain, rtrain, dtrain,
-                patch_size=config['test_patch'],
+                patch_size=config['train_patch'],
                 overlap=config['train_overlap']
             )
-        elif 'test_patch' in config:
+        elif 'train_patch' in config:
             train_dataset = dataset_class(
                 itrain, ttrain, rtrain, dtrain,
-                patch_size=config['test_patch']
+                patch_size=config['train_patch']
             )
         else:
             train_dataset = dataset_class(
