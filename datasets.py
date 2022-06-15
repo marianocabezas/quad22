@@ -281,7 +281,7 @@ class DiffusionImageDataset(Dataset):
 
     def __getitem__(self, index):
         dmri = np.expand_dims(self.images[index], 1).astype(np.float32)
-        dti = self.tensors[index]
+        dti = self.tensors[index].astype(np.float32)
         if self.min_lr == self.max_lr:
             lr_end = self.min_lr
         else:
