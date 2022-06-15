@@ -11,7 +11,7 @@ dti_metrics: True
 # Training data information
 network: TensorUnet
 dataset: DiffusionImageDataset
-train_batch: 2
+train_batch: 4
 test_batch: 8
 
 # Network hyperparameters and configuration
