@@ -12,7 +12,7 @@ dti_metrics: True
 network: TensorUnet
 dataset: DiffusionImageDataset
 train_batch: 4
-test_batch: 4
+test_batch: 8
 
 # Network hyperparameters and configuration
 heads: 64
