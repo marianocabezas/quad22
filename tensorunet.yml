@@ -18,8 +18,8 @@ test_batch: 4
 heads: 64
 encoder_filters: [8, 32, 32, 128, 128, 512]
 seeds: [42, 80702, 74794, 62021, 48497]
-val_split: 0.1
-epochs: 10
-patience: 10
+val_split: 0
+epochs: 100
+patience: 50
 model_path: /data/QuaD22
 folds: 5
