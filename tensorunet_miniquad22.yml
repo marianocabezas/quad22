@@ -18,7 +18,7 @@ test_batch: 1
 heads: 64
 encoder_filters: [8, 32, 32, 128, 128, 512]
 seeds: [42, 80702, 74794, 62021, 48497]
-val_split: 0.1
+val_split: 0
 epochs: 10
 patience: 10
 model_path: /data/MiniQuaD22
