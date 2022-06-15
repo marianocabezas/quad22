@@ -282,6 +282,7 @@ def test(
                     lr_image.astype(np.float32),
                     directions[:21, ...].astype(np.float32)
                 )) * roi
+                print(prediction.shape)
 
         image_nii = nibabel.load(find_file(config['image'], p_path))
         prediction_nii = nibabel.Nifti1Image(
@@ -301,14 +302,14 @@ def test(
             prediction_nii.to_filename(fa_path)
 
             md_name = '{:}.s{:05d}_MD.nii.gz'.format(base_name, seed)
-            md_path = os.path.join(p_path, fa_name)
+            md_path = os.path.join(p_path, md_name)
             prediction_nii = nibabel.Nifti1Image(
                 md, image_nii.get_qform(), image_nii.header
             )
             prediction_nii.to_filename(md_path)
 
             ad_name = '{:}.s{:05d}_AD.nii.gz'.format(base_name, seed)
-            ad_path = os.path.join(p_path, fa_name)
+            ad_path = os.path.join(p_path, ad_name)
             prediction_nii = nibabel.Nifti1Image(
                 ad, image_nii.get_qform(), image_nii.header
             )
