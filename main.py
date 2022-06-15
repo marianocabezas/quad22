@@ -393,11 +393,18 @@ def main():
         n_test = int(math.ceil(len(subjects) / n_folds))
         # Cross-validation loop
         for i in range(n_folds):
-            net = network_class(
-                encoder_filters=encoder_filters,
-                decoder_filters=decoder_filters,
-                heads=heads
-            )
+            try:
+                net = network_class(
+                    encoder_filters=encoder_filters,
+                    decoder_filters=decoder_filters,
+                    heads=heads
+                )
+            except TypeError:
+                # heads is most likely the issue
+                net = network_class(
+                    encoder_filters=encoder_filters,
+                    decoder_filters=decoder_filters,
+                )
             net.load_model(starting_model)
             testing = subjects[i * n_test:(i + 1) * n_test]
             not_testing = subjects[(i + 1) * n_test:] + subjects[0:i * n_test]
