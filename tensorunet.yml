@@ -18,7 +18,7 @@ test_batch: 8
 
 # Network hyperparameters and configuration
 heads: 64
-encoder_filters: [4, 16, 16, 32, 32, 64, 64]
+encoder_filters: [4, 16, 16, 64, 64, 256]
 seeds: [42, 80702, 74794, 62021, 48497]
 val_split: 0
 epochs: 10
