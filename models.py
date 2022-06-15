@@ -371,8 +371,8 @@ class TensorUnet(BaseModel):
             # Remember that pooling is optional
             data = F.max_pool3d(data, 2)
 
-        self.u.to(self.device)
-        data = self.u(data)
+        self.bottleneck.to(self.device)
+        data = self.bottleneck(data)
 
         for d, i in zip(self.decoder, down_inputs[::-1]):
             d.to(self.device)
