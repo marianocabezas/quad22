@@ -185,7 +185,8 @@ class PositionalNet(BaseModel):
         self.final = nn.Conv3d(features, 6, 1)
         self.final.to(self.device)
 
-        self.crop = len(self.encoder_filters)
+        # self.crop = len(self.encoder_filters)
+        self.crop = 0
         # <Loss function setup>
         self.train_functions = [
             {
