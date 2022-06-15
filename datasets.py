@@ -280,14 +280,13 @@ class DiffusionImageDataset(Dataset):
             self.max_lr = max_lr
 
     def __getitem__(self, index):
-        center_i, case_idx = self.patch_centers[index]
-        dmri = np.expand_dims(self.images[case_idx], 1).astype(np.float32)
-        dti = self.tensors[case_idx]
+        dmri = np.expand_dims(self.images[index], 1).astype(np.float32)
+        dti = self.tensors[index]
         if self.min_lr == self.max_lr:
             lr_end = self.min_lr
         else:
             lr_end = np.random.randint(self.min_lr, self.max_lr, 1)
-        dirs = self.directions[case_idx].astype(np.float32)[:lr_end, ...]
+        dirs = self.directions[index].astype(np.float32)[:lr_end, ...]
         data = dmri[:lr_end, ...]
 
         return (data, dirs), dti
