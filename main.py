@@ -181,7 +181,7 @@ def train(config, net, training, validation, model_name, verbose=0):
             )
         else:
             val_dataset = dataset_class(
-                ival, tval, rval, dval, shift=False,
+                ival, tval, rval, dval
             )
 
         if verbose > 1:
