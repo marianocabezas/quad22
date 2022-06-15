@@ -322,7 +322,7 @@ class TensorUnet(BaseModel):
         self.train_functions = [
             {
                 'name': 'mse',
-                'weight': 1,
+                'weight': 1e3,
                 'f': F.mse_loss
             }
         ]
@@ -330,7 +330,7 @@ class TensorUnet(BaseModel):
         self.val_functions = [
             {
                 'name': 'mse',
-                'weight': 1,
+                'weight': 1e3,
                 'f': F.mse_loss
             }
         ]
