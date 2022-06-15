@@ -339,7 +339,7 @@ class BaseModel(nn.Module):
     def embeddings(self, data, nonbatched=True):
         return self.inference(data, nonbatched)
 
-    def inference(self, data, directions=None):
+    def inference(self, data):
         with torch.no_grad():
             if isinstance(data, list) or isinstance(data, tuple):
                 x_cuda = tuple(
