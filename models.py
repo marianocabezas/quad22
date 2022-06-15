@@ -357,11 +357,7 @@ class TensorUnet(BaseModel):
 
     def mse_loss(self, prediction, target_tensors):
         roi, target = target_tensors
-        crop_slice = slice(self.crop, -self.crop)
-        loss = F.mse_loss(
-            prediction * roi,
-            target[..., crop_slice, crop_slice, crop_slice] * roi
-        )
+        loss = F.mse_loss(prediction * roi, target * roi)
         return loss
 
     def forward(self, data, bvecs):
