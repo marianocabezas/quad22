@@ -293,4 +293,4 @@ class DiffusionImageDataset(Dataset):
         return (data, dirs), dti
 
     def __len__(self):
-        return len(self.dmri)
+        return len(self.images)
