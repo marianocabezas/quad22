@@ -216,6 +216,11 @@ def test(
         tensor_flag = config['dti_metrics']
     except KeyError:
         tensor_flag = False
+    try:
+        test_patch = config['test_patch']
+        patch_flag = True
+    except KeyError:
+        patch_flag = False
     mask_name = '{:}.s{:05d}.nii.gz'.format(base_name, seed)
     test_start = time.time()
     for sub_i, subject in enumerate(testing_subjects):
@@ -241,11 +246,14 @@ def test(
         if tokenize_flag:
             token = tokenize(hr_image, directions)
             input_data = (token[:21, ...], token[21:, :-1, ...])
-            extra_image = net.patch_inference(
-                input_data, config['test_patch'], config['test_batch'],
-                None, sub_i, len(testing_subjects),
-                test_start
-            )
+            if patch_flag:
+                extra_image = net.patch_inference(
+                    input_data, config['test_patch'], config['test_batch'],
+                    None, sub_i, len(testing_subjects),
+                    test_start
+                )
+            else:
+                extra_image = net.inference(input_data)
             image = np.concatenate([lr_image, extra_image])
             log_prediction = np.concatenate([
                 log_b0, log_b0 - bvalues * image
@@ -260,11 +268,14 @@ def test(
             prediction_nii.to_filename(image_path)
         else:
             lr_image = np.expand_dims(lr_image, axis=1)
-            prediction = net.patch_inference(
-                lr_image, config['test_patch'], config['test_batch'],
-                directions[:21, ...], sub_i, len(testing_subjects),
-                test_start
-            ) * roi
+            if patch_flag:
+                prediction = net.patch_inference(
+                    lr_image, config['test_patch'], config['test_batch'],
+                    directions[:21, ...], sub_i, len(testing_subjects),
+                    test_start
+                ) * roi
+            else:
+                extra_image = net.inference(lr_image)
 
         image_nii = nibabel.load(find_file(config['image'], p_path))
         prediction_nii = nibabel.Nifti1Image(
