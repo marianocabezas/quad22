@@ -283,20 +283,19 @@ def test(
             )
             prediction_nii.to_filename(fa_path)
 
-            fa_name = '{:}.s{:05d}_MD.nii.gz'.format(base_name, seed)
-            fa_path = os.path.join(p_path, fa_name)
+            md_name = '{:}.s{:05d}_MD.nii.gz'.format(base_name, seed)
+            md_path = os.path.join(p_path, fa_name)
             prediction_nii = nibabel.Nifti1Image(
                 md, image_nii.get_qform(), image_nii.header
             )
             prediction_nii.to_filename(md_path)
 
-            fa_name = '{:}.s{:05d}_AD.nii.gz'.format(base_name, seed)
-            fa_path = os.path.join(p_path, fa_name)
+            ad_name = '{:}.s{:05d}_AD.nii.gz'.format(base_name, seed)
+            ad_path = os.path.join(p_path, fa_name)
             prediction_nii = nibabel.Nifti1Image(
                 ad, image_nii.get_qform(), image_nii.header
             )
             prediction_nii.to_filename(ad_path)
-
 
 
 """
