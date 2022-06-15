@@ -255,7 +255,7 @@ class TensorUnet(BaseModel):
             device=torch.device(
                 "cuda:0" if torch.cuda.is_available() else "cpu"
             ),
-            features=1,
+            features=21,
             verbose=0,
     ):
         super().__init__()
@@ -355,6 +355,9 @@ class TensorUnet(BaseModel):
         self.optimizer_alg = torch.optim.Adam(model_params)
 
     def forward(self, data, bvecs):
+        # This is a dirty hack to reuse the same dataset we used for
+        # self-attention.
+        data = torch.squeeze(data, 2)
         # positional = torch.matmul(bvecs, bvecs.transpose(1, 2))
         # new_shape = positional.shape[:1] + (1,) * 3 + positional.shape[-2:]
         # positional = positional.view(new_shape)
