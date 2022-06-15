@@ -264,7 +264,7 @@ class TensorUnet(BaseModel):
         if encoder_filters is None:
             encoder_filters = [4, 8, 16, 32, 64, 128]
         if decoder_filters is None:
-            decoder_filters = self.encoder_filters[:0:-1]
+            decoder_filters = encoder_filters[:0:-1]
         if decoder_filters >= encoder_filters:
             shift = len(decoder_filters) - len(encoder_filters) + 1
             extra_filters = decoder_filters[:shift]
