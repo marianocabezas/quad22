@@ -326,10 +326,10 @@ class BaseModel(nn.Module):
         t_end_s = time_to_string(t_end)
         if verbose:
             print(
-                    'Training finished in {:} epochs ({:}) '
-                    'with minimum loss = {:f} (epoch {:d})'.format(
-                        self.epoch + 1, t_end_s, self.best_loss_val, best_e
-                    )
+                'Training finished in {:} epochs ({:}) '
+                'with minimum loss = {:f} (epoch {:d})'.format(
+                    self.epoch + 1, t_end_s, self.best_loss_val, best_e
+                )
             )
 
         self.last_state = deepcopy(self.state_dict())
@@ -353,13 +353,7 @@ class BaseModel(nn.Module):
                 output = self(x_cuda)
             torch.cuda.empty_cache()
 
-            print(output.shape)
-            if len(output) > 0:
-                np_output = output.cpu().numpy()
-            else:
-                np_output = output[0].cpu().numpy()
-
-        return np_output
+        return torch.squeeze(output, 0).cpu().numpy()
 
     def patch_inference(
             self, data, patch_size, batch_size, directions=None, case=0, n_cases=1,
@@ -559,7 +553,7 @@ class BaseModel(nn.Module):
         loss_s = '{:} {:f} ({:f}) {:} / ETA {:}'
         batch_s = (epoch_hdr + loss_s).format(
             init_c, self.epoch, batch_i + 1, n_batches,
-            100 * (batch_i + 1) / n_batches, progress_s + remainder_s,
+                                100 * (batch_i + 1) / n_batches, progress_s + remainder_s,
             loss_name, b_loss, mean_loss, time_s, eta_s + '\033[0m'
         )
         print('\033[K', end='', flush=True)
@@ -582,7 +576,7 @@ class BaseModel(nn.Module):
                 ' {:} ETA: {:}'
         batch_s = pre_s.format(
             init_c, i + 1, n_cases, pi + 1, n_patches,
-            100 * (pi + 1) / n_patches,
+                    100 * (pi + 1) / n_patches,
             progress_s, remainder_s, time_s, eta_s + '\033[0m'
         )
         print('\033[K', end='', flush=True)
