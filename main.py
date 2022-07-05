@@ -248,7 +248,7 @@ def test(
             input_data = (token[:21, ...], token[21:, :-1, ...])
             if patch_flag:
                 extra_image = net.patch_inference(
-                    input_data, config['test_patch'], config['test_batch'],
+                    input_data, test_patch, config['test_batch'],
                     None, sub_i, len(testing_subjects),
                     test_start
                 )
