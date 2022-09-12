@@ -63,7 +63,6 @@ def get_subject(config, p_path):
     tensor = get_normalised_image(
         nibabel.load(find_file(config['tensor'], p_path)).get_fdata(), roi
     )
-    tensor = np.moveaxis(tensor, -1, 0)
 
     # dMRI normalization
     b0 = raw_image[:1]
