@@ -232,7 +232,7 @@ class PositionalNet(BaseModel):
         # )
         mask = roi.bool().expand_as(target)
         if mask.sum() == 0:
-            loss = torch.tensor(0, requires_grad=True)
+            loss = torch.tensor(0., requires_grad=True)
         else:
             loss = F.mse_loss(prediction[mask], target[mask])
         return loss
