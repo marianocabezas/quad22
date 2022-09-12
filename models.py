@@ -254,10 +254,10 @@ class PositionalNet(BaseModel):
             data_flat = F.interpolate(
                 data.flatten(0, 1), size=i.flatten(0, 1).size()[2:]
             )
-            data = sa(
-                data_flat.view((data.shape[0], -1) + data_flat.shape[1:]),
-                positional
-            )
+            data = torch.cat([
+                data_flat.view((data.shape[0], -1) + data_flat.shape[1:]), i
+            ], dim=1)
+            data = sa(data, positional)
 
         pred_token = self.pred_token.expand(
             (data.shape[0], 1, -1) + data.shape[3:]
