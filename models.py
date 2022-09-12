@@ -251,8 +251,14 @@ class PositionalNet(BaseModel):
         data = self.encoder[-1](data, positional)
         for sa, i in zip(self.decoder, skip_inputs[::-1]):
             sa.to(self.device)
-            data = F.interpolate(data, size=i.size()[2:])
-            data = sa(data, positional)
+            data_flat = F.interpolate(
+                data.flatten(0, 1), size=i.flatten(0, 1).size()[2:]
+            )
+            data = sa(
+                data_flat.view(
+                    (data.shape[0], -1) + self.encoder[-1].shape[1:]
+                ), positional
+            )
 
         pred_token = self.pred_token.expand(
             (data.shape[0], 1, -1) + data.shape[3:]
