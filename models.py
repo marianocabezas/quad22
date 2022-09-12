@@ -231,6 +231,8 @@ class PositionalNet(BaseModel):
         #     prediction, target[..., crop_slice, crop_slice, crop_slice]
         # )
         mask = roi.bool().expand_as(target)
+        if mask.sum() == 0:
+            print('No mask!')
         return F.mse_loss(prediction[mask], target[mask])
 
     def reset_optimiser(self):
