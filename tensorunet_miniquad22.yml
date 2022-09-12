@@ -10,9 +10,13 @@ dti_metrics: True
 
 # Training data information
 network: PositionalNet
-dataset: DiffusionImageDataset
+dataset: DiffusionDataset
+train_patch: 32
 train_batch: 1
-test_batch: 1
+train_overlap: 16
+test_batch: 4
+test_patch: 32
+test_overlap: 16
 
 # Network hyperparameters and configuration
 heads: 16
