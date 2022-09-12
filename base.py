@@ -813,7 +813,7 @@ class SelfAttentionBlock(nn.Module):
     def forward(self, x, positional=None):
         x_batched = x.flatten(0, 1)
         x_mapped = self.map(x_batched)
-        x_tokens = x_batched.view(
+        x_tokens = x_mapped.view(
             x.shape[:2] + (-1,) + x.shape[3:]
         ).flatten(3).movedim(3, 1)
         print(x.shape, x_batched.shape, x_mapped.shape, x_tokens.shape)
