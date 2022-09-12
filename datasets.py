@@ -231,7 +231,7 @@ class PositionalDiffusionDataset(DiffusionDataset):
         center_i, case_idx = self.patch_centers[index]
         dmri = self.images[case_idx]
         dti = self.tensors[case_idx]
-        roi_im = np.expand_dims(self.rois[case_idx], 0).astype(np.float32)
+        roi_im = np.expand_dims(self.rois[case_idx], 0)
         if self.min_lr == self.max_lr:
             lr_end = self.min_lr
         else:
