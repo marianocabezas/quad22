@@ -803,7 +803,7 @@ class SelfAttentionBlock(nn.Module):
             in_channels=input_features, out_channels=att_features,
             kernel_size=kernel, padding=padding
         )
-
+        print(input_features, att_features, heads)
         self.ln1 = nn.LayerNorm(att_features, eps=1e-6)
         self.attention = nn.MultiheadAttention(
             att_features, heads, batch_first=True

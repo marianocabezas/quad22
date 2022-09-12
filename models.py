@@ -171,6 +171,7 @@ class PositionalNet(BaseModel):
 
         # <Parameter setup>
         enc_in = [features] + self.encoder_filters[:-1]
+        print(self.encoder_filters, heads)
         self.encoder = nn.ModuleList([
             SelfAttentionBlock(f_in, f_out, heads, 3)
             for f_in, f_out in zip(enc_in, self.encoder_filters)
