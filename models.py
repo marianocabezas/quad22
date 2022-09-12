@@ -261,7 +261,7 @@ class PositionalNet(BaseModel):
 
         pred_token = self.pred_token.expand(
             (data.shape[0], 1, -1) + data.shape[3:]
-        )
+        ).to(self.device)
         data = torch.cat([data, pred_token], dim=1)
 
         self.final_tf.to(self.device)
