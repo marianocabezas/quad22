@@ -237,6 +237,7 @@ class PositionalNet(BaseModel):
         self.optimizer_alg = torch.optim.Adam(model_params)
 
     def forward(self, data, bvecs):
+        print(bvecs.shape)
         positional = torch.matmul(
             bvecs, bvecs.transpose(1, 2)
         ).squeeze(0)
