@@ -10,7 +10,7 @@ dti_metrics: True
 
 # Training data information
 network: PositionalNet
-dataset: DiffusionImageDataset
+dataset: PositionalDiffusionDataset
 train_batch: 4
 test_batch: 8
 
