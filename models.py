@@ -243,6 +243,7 @@ class PositionalNet(BaseModel):
         skip_inputs = []
         for sa in self.encoder[:-1]:
             sa.to(self.device)
+            print(data.shape, positional.shape)
             data = sa(data, positional)
             skip_inputs.append(data)
             data_flat = F.max_pool3d(data.flatten(0, 1), 2)
