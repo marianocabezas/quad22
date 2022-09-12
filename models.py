@@ -178,7 +178,7 @@ class PositionalNet(BaseModel):
         self.encoder.to(self.device)
 
         dec_skip = self.encoder_filters[-2::-1]
-        dec_up = self.decoder_filters[:-1]
+        dec_up = [self.encoder_filters[-1]] + self.decoder_filters[:-1]
         self.decoder = nn.ModuleList([
             SelfAttentionBlock(f_out + f_up, f_out, heads, 3)
             for f_out, f_up in zip(dec_skip, dec_up)
