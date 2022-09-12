@@ -63,6 +63,7 @@ def get_subject(config, p_path):
     tensor = get_normalised_image(
         nibabel.load(find_file(config['tensor'], p_path)).get_fdata(), roi
     )
+    tensor = np.moveaxis(tensor, -1, 0)
 
     # dMRI normalization
     b0 = raw_image[:1]
@@ -76,8 +77,8 @@ def get_subject(config, p_path):
     log_dmri = np.log(dmri)
     log_dmri[invalid_dmri] = 0
     b_dmri = (log_b0 - log_dmri) / bvals_array
-    print(tensor.shape, b_dmri.shape, roi.shape)
-    norm_image = get_normalised_image(b_dmri, roi)
+    print(tensor.shape, np.moveaxis(b_dmri, 0, 1).shape, roi.shape)
+    norm_image = get_normalised_image(np.moveaxis(b_dmri, 0, 1), roi)
 
     return norm_image, log_b0, tensor, roi, bvecs_array, bvals_array
 
