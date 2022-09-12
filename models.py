@@ -246,15 +246,16 @@ class PositionalNet(BaseModel):
             data = sa(data, positional)
             skip_inputs.append(data)
             data_flat = F.max_pool3d(data.flatten(0, 1), 2)
-            data = data_flat.view((data.shape[0], -1) + data.shape[1:])
+            data = data_flat.view((data.shape[0], -1) + data_flat.shape[1:])
         self.encoder[-1].to(self.device)
         data = self.encoder[-1](data, positional)
         for sa, i in zip(self.decoder, skip_inputs[::-1]):
             sa.to(self.device)
             data_flat = F.interpolate(data.flatten(0, 1), size=i.size()[2:])
             data = sa(
-                data_flat.view((data.shape[0], -1) + data.shape[1:]),
-                positional
+                data_flat.view(
+                    (data.shape[0], -1) + self.encoder[-1].shape[1:]
+                ), positional
             )
 
         pred_token = self.pred_token.expand(
