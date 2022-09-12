@@ -256,7 +256,7 @@ class PositionalNet(BaseModel):
             )
             data = torch.cat([
                 data_flat.view((data.shape[0], -1) + data_flat.shape[1:]), i
-            ], dim=1)
+            ], dim=2)
             data = sa(data, positional)
 
         pred_token = self.pred_token.expand(
