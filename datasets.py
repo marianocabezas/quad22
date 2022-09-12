@@ -249,13 +249,13 @@ class PositionalDiffusionDataset(DiffusionDataset):
         patch = np.expand_dims(
             dmri[none_slice + slice_i].astype(np.float32), 1
         )
-        target_data = dti[none_slice + slice_i].astype(np.float32)
+        dti = dti[none_slice + slice_i].astype(np.float32)
         dirs = self.directions[case_idx].astype(np.float32)[:lr_end, ...]
         roi = roi_im[none_slice + slice_i]
 
         data = deepcopy(patch[:lr_end, ...])
 
-        return (data, dirs), (roi, target_data)
+        return (data, dirs), (roi, dti)
 
     def __len__(self):
         return len(self.patch_centers)

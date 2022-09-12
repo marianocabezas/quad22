@@ -225,7 +225,7 @@ class PositionalNet(BaseModel):
             )
 
     def mse_loss(self, prediction, target):
-        target, roi = target
+        roi, target = target
         # crop_slice = slice(self.crop, -self.crop)
         # loss = F.mse_loss(
         #     prediction, target[..., crop_slice, crop_slice, crop_slice]
