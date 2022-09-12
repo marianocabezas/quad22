@@ -230,7 +230,7 @@ class PositionalNet(BaseModel):
         # loss = F.mse_loss(
         #     prediction, target[..., crop_slice, crop_slice, crop_slice]
         # )
-        return F.mse_loss(prediction[roi], target[roi])
+        return F.mse_loss(prediction[roi.bool()], target[roi.bool()])
 
     def reset_optimiser(self):
         super().reset_optimiser()
