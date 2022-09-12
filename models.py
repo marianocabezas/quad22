@@ -238,8 +238,6 @@ class PositionalNet(BaseModel):
 
     def forward(self, data, bvecs):
         positional = torch.matmul(bvecs, bvecs.transpose(1, 2))
-        new_shape = positional.shape[:1] + (1,) * 3 + positional.shape[-2:]
-        positional = positional.view(new_shape)
         skip_inputs = []
         for sa in self.encoder:
             sa.to(self.device)

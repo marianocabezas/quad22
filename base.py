@@ -816,11 +816,11 @@ class SelfAttentionBlock(nn.Module):
         x_tokens = x_mapped.view(
             x.shape[:2] + (-1,) + x.shape[3:]
         ).flatten(3).movedim(3, 1)
-        print(x.shape, x_batched.shape, x_mapped.shape, x_tokens.shape)
         x_in = x_tokens.flatten(0, 1)
+        attn_mask = positional.expand((x_in.shape[0], -1, x_in.shape[-1]))
         x = self.ln1(x_in)
         x, _ = self.attention(
-            query=x, key=x, value=x, attn_mask=positional,
+            query=x, key=x, value=x, attn_mask=attn_mask,
             need_weights=False
         )
         x = x + x_in
