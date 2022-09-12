@@ -9,7 +9,7 @@ tokenize: False
 dti_metrics: True
 
 # Training data information
-network: TensorUnet
+network: PositionalNet
 dataset: DiffusionImageDataset
 train_batch: 4
 test_batch: 8

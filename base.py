@@ -783,3 +783,52 @@ class MultiheadedAttention(nn.Module):
             query_batched = query_batched[(slice(None),) * 2 + crop]
         residual = features + query_batched
         return residual.view(query.shape[:3] + residual.shape[2:])
+
+
+class SelfAttentionBlock(nn.Module):
+    """
+        Non-local self-attention block based on
+        X. Wang, R. Girshick, A.Gupta, K. He
+        "Non-local Neural Networks"
+        https://arxiv.org/abs/1711.07971
+    """
+
+    def __init__(
+        self, input_features, att_features, kernel=1, heads=32,
+    ):
+        super().__init__()
+        self.features = att_features
+        padding = kernel // 2
+        self.map = nn.Conv3d(
+            in_channels=input_features, out_channels=att_features,
+            kernel_size=kernel, padding=padding
+        )
+
+        self.ln1 = nn.LayerNorm(att_features, eps=1e-6)
+        self.attention = nn.MultiheadAttention(
+            att_features, heads, batch_first=True
+        )
+        self.ln2 = nn.LayerNorm(att_features, eps=1e-6)
+        self.mlp = nn.Linear(att_features, att_features)
+
+    def forward(self, x, positional=None):
+        x_batched = x.flatten(0, 1)
+        x_mapped = self.map(x_batched)
+        x_tokens = x_batched.view(
+            x.shape[:2] + (-1,) + x.shape[3:]
+        ).flatten(3).movedim(3, 1)
+        x_in = x_tokens.flatten(0, 1)
+        x = self.ln1(x_in)
+        x, _ = self.attention(
+            query=x, key=x, value=x, attn_mask=positional,
+            need_weights=False
+        )
+        x = x + x_in
+
+        y = self.ln2(x)
+        y = self.mlp(y)
+
+        final = x + y
+        final_tokens = final.view(x_tokens.shape)
+
+        return final_tokens.movedim(1, 3).view(x_mapped.shape)

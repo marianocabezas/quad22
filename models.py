@@ -4,7 +4,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from base import BaseModel
-from base import MultiheadedAttention, ResConv3dBlock
+from base import MultiheadedAttention, SelfAttentionBlock, ResConv3dBlock
 from utils import time_to_string
 
 
@@ -148,7 +148,7 @@ class SimpleNet(BaseModel):
 class PositionalNet(BaseModel):
     def __init__(
             self,
-            encoder_filters=None, decoder_filters=None, heads=32,
+            encoder_filters=None, heads=32,
             device=torch.device(
                 "cuda:0" if torch.cuda.is_available() else "cpu"
             ),
@@ -159,34 +159,40 @@ class PositionalNet(BaseModel):
         self.init = False
         # Init values
         if encoder_filters is None:
-            self.encoder_filters = [4, 4, 4, 4, 4, 4]
+            self.encoder_filters = [16, 32, 64, 128, 256, 512]
         else:
             self.encoder_filters = encoder_filters
-        if decoder_filters is None:
-            self.decoder_filters = self.encoder_filters[::-1]
-        else:
-            self.decoder_filters = decoder_filters
+        self.decoder_filters = self.encoder_filters[-2::-1]
+
         self.epoch = 0
         self.t_train = 0
         self.t_val = 0
         self.device = device
 
         # <Parameter setup>
+        enc_in = [features] + self.encoder_filters[:-1]
         self.encoder = nn.ModuleList([
-            MultiheadedAttention(features, features, f_att, heads, 1)
-            for f_att in self.encoder_filters
+            SelfAttentionBlock(f_in, f_out, heads, 3)
+            for f_in, f_out in zip(enc_in, self.encoder_filters)
         ])
         self.encoder.to(self.device)
+
+        dec_skip = self.encoder_filters[-2::-1]
+        dec_up = self.decoder_filters[:-1]
         self.decoder = nn.ModuleList([
-            MultiheadedAttention(features, features, f_att, heads, 1)
-            for f_att in self.decoder_filters
+            SelfAttentionBlock(f_out + f_up, f_out, heads, 3)
+            for f_out, f_up in zip(dec_skip, dec_up)
         ])
         self.decoder.to(self.device)
-        self.final = nn.Conv3d(features, 6, 1)
+
+        final_feat = self.encoder_filters[0]
+        self.pred_token = nn.Parameter(
+            torch.rand((1, 1, final_feat, 1, 1, 1)), requires_grad=True
+        )
+        self.final_tf = SelfAttentionBlock(final_feat, final_feat, heads, 3)
+        self.final = nn.Conv3d(final_feat, 6, 1)
         self.final.to(self.device)
 
-        # self.crop = len(self.encoder_filters)
-        self.crop = 0
         # <Loss function setup>
         self.train_functions = [
             {
@@ -234,19 +240,26 @@ class PositionalNet(BaseModel):
         positional = torch.matmul(bvecs, bvecs.transpose(1, 2))
         new_shape = positional.shape[:1] + (1,) * 3 + positional.shape[-2:]
         positional = positional.view(new_shape)
+        skip_inputs = []
         for sa in self.encoder:
             sa.to(self.device)
-            data = sa(data, None, positional)
-        for sa in self.decoder:
+            data = sa(data, positional)
+            skip_inputs.append(data)
+            data = F.max_pool3d(data, 2)
+        for sa, i in zip(self.decoder, skip_inputs[::-1]):
             sa.to(self.device)
-            data = sa(data, None, positional)
+            data = F.interpolate(data, size=i.size()[2:])
+            data = sa(data, positional)
 
-        feat_flat = data.flatten(0, 1)
+        pred_token = self.pred_token.expand(
+            (data.shape[0], 1, -1) + data.shape[3:]
+        )
+        data = torch.cat([data, pred_token], dim=1)
+
+        self.final_tf.to(self.device)
+        data = self.final_tf(data)
         self.final.to(self.device)
-        dti_flat = self.final(feat_flat)
-        dti_shape = data.shape[:2] + (-1,) + data.shape[3:]
-
-        return torch.sum(dti_flat.view(dti_shape), dim=1)
+        return self.final(data[:, -1, ...])
 
 
 class TensorUnet(BaseModel):
