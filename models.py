@@ -237,7 +237,9 @@ class PositionalNet(BaseModel):
         self.optimizer_alg = torch.optim.Adam(model_params)
 
     def forward(self, data, bvecs):
-        positional = torch.matmul(bvecs, bvecs.transpose(1, 2))
+        positional = torch.matmul(
+            bvecs, bvecs.transpose(1, 2)
+        ).squeeze(0)
         skip_inputs = []
         for sa in self.encoder:
             sa.to(self.device)
