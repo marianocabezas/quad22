@@ -237,20 +237,25 @@ class PositionalNet(BaseModel):
         self.optimizer_alg = torch.optim.Adam(model_params)
 
     def forward(self, data, bvecs):
-        print(data.shape, bvecs.shape)
         positional = torch.matmul(
             bvecs, bvecs.transpose(1, 2)
         ).squeeze(0)
         skip_inputs = []
-        for sa in self.encoder:
+        for sa in self.encoder[:-1]:
             sa.to(self.device)
             data = sa(data, positional)
             skip_inputs.append(data)
-            data = F.max_pool3d(data, 2)
+            data_flat = F.max_pool3d(data.flatten(0, 1), 2)
+            data = data_flat.view((data.shape[0], -1) + data.shape[1:])
+        self.encoder[-1].to(self.device)
+        data = self.encoder[-1](data, positional)
         for sa, i in zip(self.decoder, skip_inputs[::-1]):
             sa.to(self.device)
-            data = F.interpolate(data, size=i.size()[2:])
-            data = sa(data, positional)
+            data_flat = F.interpolate(data.flatten(0, 1), size=i.size()[2:])
+            data = sa(
+                data_flat.view((data.shape[0], -1) + data.shape[1:]),
+                positional
+            )
 
         pred_token = self.pred_token.expand(
             (data.shape[0], 1, -1) + data.shape[3:]
