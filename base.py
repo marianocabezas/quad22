@@ -817,6 +817,7 @@ class SelfAttentionBlock(nn.Module):
             x.shape[:2] + (-1,) + x.shape[3:]
         ).flatten(3).movedim(3, 1)
         x_in = x_tokens.flatten(0, 1)
+        print(positional.shape)
         attn_mask = positional.expand((-1, x_in.shape[-1]))
         x = self.ln1(x_in)
         x, _ = self.attention(
