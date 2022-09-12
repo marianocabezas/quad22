@@ -255,9 +255,8 @@ class PositionalNet(BaseModel):
                 data.flatten(0, 1), size=i.flatten(0, 1).size()[2:]
             )
             data = sa(
-                data_flat.view(
-                    (data.shape[0], -1) + self.encoder[-1].shape[1:]
-                ), positional
+                data_flat.view((data.shape[0], -1) + data_flat.shape[1:]),
+                positional
             )
 
         pred_token = self.pred_token.expand(
