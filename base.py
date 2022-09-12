@@ -830,5 +830,6 @@ class SelfAttentionBlock(nn.Module):
 
         final = x + y
         final_tokens = final.view(x_tokens.shape)
+        final_shape = x.shape[:2] + x_mapped.shape[1:]
 
-        return final_tokens.movedim(1, 3).view(x_mapped.shape)
+        return final_tokens.movedim(1, 3).view(final_shape)
