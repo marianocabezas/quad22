@@ -797,6 +797,7 @@ class SelfAttentionBlock(nn.Module):
         self, input_features, att_features, heads=32, kernel=1,
     ):
         super().__init__()
+        self.heads = heads
         self.features = att_features
         padding = kernel // 2
         self.map = nn.Conv3d(
@@ -817,8 +818,9 @@ class SelfAttentionBlock(nn.Module):
             x.shape[:2] + (-1,) + x.shape[3:]
         ).flatten(3).movedim(3, 1)
         x_in = x_tokens.flatten(0, 1)
-        print(positional.shape)
-        attn_mask = positional.expand((-1, x_in.shape[-1]))
+        attn_mask = torch.repeat_interleave(
+            positional, len(positional) * self.heads, dim=0
+        )
         x = self.ln1(x_in)
         x, _ = self.attention(
             query=x, key=x, value=x, attn_mask=attn_mask,
