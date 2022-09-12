@@ -819,7 +819,7 @@ class SelfAttentionBlock(nn.Module):
         ).flatten(3).movedim(3, 1)
         x_in = x_tokens.flatten(0, 1)
         attn_mask = torch.repeat_interleave(
-            positional, len(positional) * self.heads, dim=0
+            positional, torch.prod(x.shape[:2]), dim=0
         )
         x = self.ln1(x_in)
         x, _ = self.attention(
