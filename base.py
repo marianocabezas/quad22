@@ -811,11 +811,11 @@ class SelfAttentionBlock(nn.Module):
         self.ln2 = nn.LayerNorm(att_features, eps=1e-6)
         self.mlp = nn.Linear(att_features, att_features)
 
-    def forward(self, x, positional=None):
-        x_batched = x.flatten(0, 1)
+    def forward(self, data, positional=None):
+        x_batched = data.flatten(0, 1)
         x_mapped = self.map(x_batched)
         x_tokens = x_mapped.view(
-            x.shape[:2] + (-1,) + x.shape[3:]
+            data.shape[:2] + (-1,) + data.shape[3:]
         ).flatten(3).movedim(3, 1)
         x_in = x_tokens.flatten(0, 1)
         x = self.ln1(x_in)
@@ -830,6 +830,6 @@ class SelfAttentionBlock(nn.Module):
 
         final = x + y
         final_tokens = final.view(x_tokens.shape)
-        final_shape = x.shape[:2] + x_mapped.shape[1:]
+        final_shape = data.shape[:2] + x_mapped.shape[1:]
 
         return final_tokens.movedim(1, 3).view(final_shape)
