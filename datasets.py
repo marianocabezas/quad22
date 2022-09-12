@@ -231,6 +231,7 @@ class PositionalDiffusionDataset(DiffusionDataset):
         center_i, case_idx = self.patch_centers[index]
         dmri = self.images[case_idx]
         dti = self.tensors[case_idx]
+        roi_im = np.expand_dims(self.rois[case_idx], 0).astype(np.float32)
         if self.min_lr == self.max_lr:
             lr_end = self.min_lr
         else:
@@ -250,10 +251,11 @@ class PositionalDiffusionDataset(DiffusionDataset):
         )
         target_data = dti[none_slice + slice_i].astype(np.float32)
         dirs = self.directions[case_idx].astype(np.float32)[:lr_end, ...]
+        roi = roi_im[none_slice + slice_i]
 
         data = deepcopy(patch[:lr_end, ...])
 
-        return (data, dirs), target_data
+        return (data, dirs), (roi, target_data)
 
     def __len__(self):
         return len(self.patch_centers)
