@@ -794,7 +794,7 @@ class SelfAttentionBlock(nn.Module):
     """
 
     def __init__(
-        self, input_features, att_features, kernel=1, heads=32,
+        self, input_features, att_features, heads=32, kernel=1,
     ):
         super().__init__()
         self.features = att_features
@@ -803,7 +803,6 @@ class SelfAttentionBlock(nn.Module):
             in_channels=input_features, out_channels=att_features,
             kernel_size=kernel, padding=padding
         )
-        print(input_features, att_features, heads)
         self.ln1 = nn.LayerNorm(att_features, eps=1e-6)
         self.attention = nn.MultiheadAttention(
             att_features, heads, batch_first=True
