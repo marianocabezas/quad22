@@ -816,6 +816,7 @@ class SelfAttentionBlock(nn.Module):
         x_tokens = x_batched.view(
             x.shape[:2] + (-1,) + x.shape[3:]
         ).flatten(3).movedim(3, 1)
+        print(x.shape, x_batched.shape, x_mapped.shape, x_tokens.shape)
         x_in = x_tokens.flatten(0, 1)
         x = self.ln1(x_in)
         x, _ = self.attention(
