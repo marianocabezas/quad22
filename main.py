@@ -76,9 +76,9 @@ def get_subject(config, p_path):
     dmri[invalid_dmri] = 1e-6
     log_dmri = np.log(dmri)
     log_dmri[invalid_dmri] = 0
-    norm_image = get_normalised_image(
-        (log_b0 - log_dmri) / bvals_array, roi
-    )
+    b_dmri = (log_b0 - log_dmri) / bvals_array
+    print(tensor.shape, b_dmri.shape, roi.shape)
+    norm_image = get_normalised_image(b_dmri, roi)
 
     return norm_image, log_b0, tensor, roi, bvecs_array, bvals_array
 
