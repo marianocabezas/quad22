@@ -168,6 +168,7 @@ class PositionalNet(BaseModel):
         self.t_train = 0
         self.t_val = 0
         self.device = device
+        self.crop = 0
 
         # <Parameter setup>
         enc_in = [features] + self.encoder_filters[:-1]
